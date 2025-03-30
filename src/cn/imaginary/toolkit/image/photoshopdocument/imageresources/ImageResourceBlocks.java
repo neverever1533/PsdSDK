@@ -87,12 +87,6 @@ public class ImageResourceBlocks {
             rafile.skipBytes(length_ResourceData);
 
             length_ImageResourceBlocks = 4 + 2 + 1 + length_Name + 4 + length_ResourceData;
-            // } else {
-            //                 rafile.seek(rafile.getFilePointer() - 4);
-            //                 rafile.skipBytes(length_ImageResourceBlocks);
-            //                 throw new IOException("wrong Image Resource Blocks signature");
-            //                 returnn;
-            // }
         } catch (IOException e) {}
     }
 
