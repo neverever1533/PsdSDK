@@ -33,9 +33,8 @@ public class ImageResources {
                 while (point < length_ImageResources) {
                     irblocks.read(rafile);
                     len = irblocks.getLength();
-                    System.out.println(irblocks.toString());
                     point += len;
-                    // rafile.seek(rafile.getFilePointer() + len);
+                    rafile.skipBytes(len);
                 }
                 rafile.skipBytes((int) (length_ImageResources - point));
             }
