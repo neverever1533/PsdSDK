@@ -44,7 +44,7 @@ public class ImageResourceBlocks {
         return length_ImageResourceBlocks;
     }
 
-    public void read(RandomAccessFile rafile) {
+    public void read(RandomAccessFile rafile, int length) {
         try {
             //3.2.1.1 signature:4
             // Signature: '8BIM'
@@ -61,14 +61,14 @@ public class ImageResourceBlocks {
             id_Resource = rafile.readShort();
 
             //3.2.1.3 Name Length:1
-            length_Name = rafile.readByte();
+            // length_Name = rafile.readByte();
+            length_Name = rafile.readByte() & 0xFF;
 
             if (length_Name == 0) {
                 length_Name = 2;
-            } else {
-                if (length_Name % 2 != 0) {
-                    length_Name++;
-                }
+            }
+            if (length_Name % 2 != 0) {
+                length_Name++;
             }
 
             //3.2.1.4 Name:?
@@ -77,23 +77,37 @@ public class ImageResourceBlocks {
             rafile.read(arr);
             name = new String(arr);
 
+            long sign = rafile.getFilePointer();
+            arr = new byte[16];
+            rafile.read(arr);
+            for (int i = 0, len = arr.length; i < len; i++) {
+                // System.out.println(arr[i] & 0xFF);
+                System.out.println(arr[i]);
+            }
+            rafile.seek(sign);
+
             //3.2.1.5 Resource Data Size:4
             // Actual size of resource data that follows
             length_ResourceData = rafile.readInt();
+            if (length_ResourceData % 2 != 0) {
+                length_ResourceData++;
+            }
+            System.out.println("??? length: " + length_ResourceData);
+
+            int length_;
+            int length_offset;
+            length_offset = 4 + 2 + 1 + length_Name + 4;
+            length_ = length - length_offset;
+            if (length_ResourceData > length_) {
+                length_ResourceData = length_;
+            }
 
             //3.2.1.6 Resource Data:?
             // The resource data, described in the sections on the individual resource types. It is padded to make the size even.
-            // ImageResourceIDs irIDs = new ImageResourceIDs();
-            // irIDs.read(rafile, length_ResourceData, id_Resource);
-            rafile.skipBytes(length_ResourceData);
+            ImageResourceIDs irIDs = new ImageResourceIDs();
+            irIDs.read(rafile, length_ResourceData, id_Resource);
 
-            length_ImageResourceBlocks = 4 + 2 + 1 + length_Name + 4 + length_ResourceData;
-            // } else {
-            //                 rafile.seek(rafile.getFilePointer() - 4);
-            //                 rafile.skipBytes(length_ImageResourceBlocks);
-            //                 throw new IOException("wrong Image Resource Blocks signature");
-            //                 returnn;
-            // }
+            length_ImageResourceBlocks = length_offset + length_ResourceData;
         } catch (IOException e) {}
     }
 
