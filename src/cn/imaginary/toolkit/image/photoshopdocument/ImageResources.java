@@ -33,10 +33,13 @@ public class ImageResources {
                 while (point < length_ImageResources) {
                     irblocks.read(rafile);
                     len = irblocks.getLength();
+                    //if (irblocks.getSignature().equalsIgnoreCase(ImageResourceBlocks.Signature_ImageResourceBlocks)) {
+                    System.out.println(irblocks.toString());
+                    //}
                     point += len;
-                    rafile.skipBytes(len);
+                    //rafile.skipBytes(len);
                 }
-                rafile.skipBytes((int) (length_ImageResources - point));
+                //rafile.skipBytes((int) (length_ImageResources - point));
             }
             System.out.println("3.location_ImageResources: " + rafile.getFilePointer());
             System.out.println();
