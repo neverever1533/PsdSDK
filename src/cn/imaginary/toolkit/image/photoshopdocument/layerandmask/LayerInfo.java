@@ -1,6 +1,6 @@
 package cn.imaginary.toolkit.image.photoshopdocument.layerandmask;
 
-import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelImageData;
+// import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelImageData;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.LayerRecords;
 import java.io.IOException;
 import java.io.RandomAccessFile;
