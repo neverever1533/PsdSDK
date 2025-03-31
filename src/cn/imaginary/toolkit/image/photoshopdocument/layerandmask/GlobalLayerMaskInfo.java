@@ -10,6 +10,12 @@ public class GlobalLayerMaskInfo {
 
     private int length_GlobalLayerMaskInfo;
     private int overlayColorSpace;
+
+    private int red;
+    private int green;
+    private int blue;
+    private int alpha;
+
     private int opacity;
     private int kind;
     private int filler;
@@ -18,15 +24,31 @@ public class GlobalLayerMaskInfo {
         return 4 + length_GlobalLayerMaskInfo;
     }
 
-    private int getOverlayColorSpace() {
+    public int getOverlayColorSpace() {
         return overlayColorSpace;
     }
 
-    private int getOpacity() {
+    public int getRed() {
+        return red;
+    }
+
+    public int getGreen() {
+        return green;
+    }
+
+    public int getBlue() {
+        return blue;
+    }
+
+    public int getAlpha() {
+        return alpha;
+    }
+
+    public int getOpacity() {
         return opacity;
     }
 
-    private int getKind() {
+    public int getKind() {
         return kind;
     }
 
@@ -43,10 +65,10 @@ public class GlobalLayerMaskInfo {
 
             //4.3.3 Color Components:8
             // 4 * 2 byte color components
-            int component1 = rafile.readShort();
-            int component2 = rafile.readShort();
-            int component3 = rafile.readShort();
-            int component4 = rafile.readShort();
+            red = rafile.readShort();
+            green = rafile.readShort();
+            blue = rafile.readShort();
+            alpha = rafile.readShort();
 
             //4.3.4 Opacity:2
             // Opacity. 0 = transparent, 100 = opaque.
@@ -58,8 +80,16 @@ public class GlobalLayerMaskInfo {
 
             //4.3.6 Filler: zeros：?
             int length_Filler = length_GlobalLayerMaskInfo - 2 - 8 - 2 - 1;
-            rafile.skipBytes(length_Filler);
-            filler = 0;
+            if (length_Filler > 0) {
+                byte[] arr = new byte[length_Filler];
+                rafile.read(arr);
+                System.out.println("filler: ");
+                for (int i = 0; i < arr.length; i++) {
+                    System.out.println(arr[i]);
+                }
+            }
+            // rafile.skipBytes(length_Filler);
+            // filler = 0;
 
             System.out.println("location_globallayermaskinfo: " + rafile.getFilePointer());
             System.out.println();
@@ -72,7 +102,7 @@ public class GlobalLayerMaskInfo {
         StringBuilder sbuilder = new StringBuilder();
         sbuilder.append("length_GlobalLayerMaskInfo: " + length_GlobalLayerMaskInfo);
         sbuilder.append("/overlayColorSpace: " + overlayColorSpace);
-        sbuilder.append("/component: " + component1 + "/" + component2 + "/" + component3 + "/" + component4);
+        sbuilder.append("/color: " + red + "/" + green + "/" + blue + "/" + alpha);
         sbuilder.append("/opacity: " + opacity);
         sbuilder.append("/kind: " + kind);
         sbuilder.append("/filler: " + filler);
