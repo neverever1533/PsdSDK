@@ -27,7 +27,7 @@ public class LayerAndMaskInformation {
             if (version == FileHeader.Version_PSD) {
                 length_LayerAndMaskInformation = rafile.readInt();
             } else if (version == FileHeader.Version_PSB) {
-              byte[] arr=new byte[8];
+                byte[] arr = new byte[8];
                 length_LayerAndMaskInformation = rafile.read(arr);
             }
 
@@ -36,16 +36,20 @@ public class LayerAndMaskInformation {
             LayerInfo linfo = new LayerInfo();
             linfo.read(rafile);
             System.out.println(linfo.toString());
+            System.out.println("location layer info: " + rafile.getFilePointer());
 
             //4.3 Global Layer Mask Info:?
             // Global layer mask info (see See Global layer mask info for details).
+
             GlobalLayerMaskInfo glminfo = new GlobalLayerMaskInfo();
             glminfo.read(rafile);
             System.out.println(glminfo.toString());
+            System.out.println("location Global Layer Mask Info: " + rafile.getFilePointer());
 
             //4.4 Additional Layer Information:?
             // (Photoshop 4.0 and later)
             // Series of tagged blocks containing various types of data. See See Additional Layer Information for the list of the types of data that can be included here.
+
             AdditionalLayerInformation alinfo = new AdditionalLayerInformation();
             alinfo.read(rafile);
             System.out.println(alinfo.toString());
