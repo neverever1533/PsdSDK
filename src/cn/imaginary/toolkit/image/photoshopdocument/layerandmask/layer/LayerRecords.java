@@ -12,7 +12,6 @@ public class LayerRecords {
     public LayerRecords() {}
 
     private int length_LayerRecords;
-
     private int top;
     private int left;
     private int bottom;
@@ -20,9 +19,9 @@ public class LayerRecords {
     private int channels;
 
     private String signature;
-    private String Signature_BlendMode = "8BIM";
-
+    public static String Signature_BlendMode = "8BIM";
     private String blendMode;
+
     private int opacity;
     private int clipping;
     private int flags;
@@ -30,6 +29,62 @@ public class LayerRecords {
     private int length_ExtraData;
 
     private String name_Layer;
+
+    public int getLength() {
+        return length_LayerRecords;
+    }
+
+    public int getTop() {
+        return top;
+    }
+
+    public int getLeft() {
+        return left;
+    }
+
+    public int getBottom() {
+        return bottom;
+    }
+
+    public int getRight() {
+        return right;
+    }
+
+    public int getChannels() {
+        return channels;
+    }
+
+    public String getSignature() {
+        return signature;
+    }
+
+    public String blendMode() {
+        return blendMode;
+    }
+
+    public int getOpacity() {
+        return opacity;
+    }
+
+    public int getClipping() {
+        return clipping;
+    }
+
+    public int getFlags() {
+        return flags;
+    }
+
+    public int getFiller() {
+        return filler;
+    }
+
+    public int lengthExtraData() {
+        return length_ExtraData;
+    }
+
+    public String getLayerName() {
+        return name_Layer;
+    }
 
     public void read(RandomAccessFile rafile) {
         try {
@@ -43,22 +98,24 @@ public class LayerRecords {
             //4.2.3.2 Channels:2
             // Number of channels in the layer
             channels = rafile.readShort();
-            //channels = rafile.readShort() & 0xFF;
 
             //4.2.3.3 Channel Info ?
+            int id;
+            int length;
             for (int j = 0; j < channels; j++) {
                 // Channel information. Six bytes per channel, consisting of:
                 // 2 bytes for Channel ID: 0 = red, 1 = green, etc.;
                 // -1 = transparency mask; -2 = user supplied layer mask, -3 real user supplied layer mask (when both a user mask and a vector mask are present)
-                ChannelInfo cinfo = new ChannelInfo();
                 //4.2.3.3.1 Channel ID:2
-                cinfo.setID(rafile.readShort());
+                id = rafile.readShort();
+                ChannelInfo cinfo = new ChannelInfo();
+                cinfo.setID(id);
 
                 //4.2.3.3.2 Channel Data Length:4
                 // 4 bytes for length of corresponding channel data. (**PSB** 8 bytes for length of corresponding channel data.) See See Channel image data for structure of channel data.
-                cinfo.setLength(rafile.readInt());
+                length = rafile.readInt();
+                cinfo.setLength(length);
                 System.out.println(cinfo.toString());
-                System.out.println();
             }
             //4.2.3.4 Blend Mode Signature:4
             // Blend mode signature: '8BIM
@@ -101,31 +158,33 @@ public class LayerRecords {
             // Length of the extra data field ( = the total length of the next five fields).
             length_ExtraData = rafile.readInt();
 
-            //rafile.skipBytes(length_ExtraData);
+            rafile.skipBytes(length_ExtraData);
 
             //4.2.3.11 Extra Data ?(Layer mask / adjustment layer data)
             // Layer mask data: See See Layer mask / adjustment layer data for structure. Can be 40 bytes, 24 bytes, or 4 bytes if no layer mask
-            LayerMaskOrAdjustmentLayerData lmoaldata = new LayerMaskOrAdjustmentLayerData();
+            /*LayerMaskOrAdjustmentLayerData lmoaldata = new LayerMaskOrAdjustmentLayerData();
             lmoaldata.read(rafile);
-            int length_lmoaldata = lmoaldata.getLength();
+            int length_lmoaldata = lmoaldata.getLength();*/
 
             //4.2.3.12 Layer Blending Ranges:?
             // Layer blending ranges: See See Layer blending ranges data.
-            LayerBlendingRangesData lbrdata = new LayerBlendingRangesData();
+            /*LayerBlendingRangesData lbrdata = new LayerBlendingRangesData();
             lbrdata.read(rafile);
-            int length_lbrdata = lbrdata.getLength();
+            int length_lbrdata = lbrdata.getLength();*/
 
             //4.2.3.13 Layer Name:?
             // Layer name: Pascal string, padded to a multiple of 4 bytes.
-            int length_Name = length_ExtraData - length_lmoaldata - length_lbrdata;
+            /*int length_Name = length_ExtraData - length_lmoaldata - length_lbrdata;
             if (length_Name > 0) {
                 arr = new byte[length_Name];
                 rafile.read(arr);
                 name_Layer = new String(arr);
             } else {
                 length_Name = 0;
-            }
-            length_LayerRecords = 16 + 2 + channels * 6 + 4 + 4 + 1 + 1 + 1 + 1 + 4 + length_ExtraData + length_Name;
+            }*/
+
+            //length_LayerRecords = 16 + 2 + channels * 6 + 4 + 4 + 1 + 1 + 1 + 1 + 4 + length_ExtraData + length_Name;
+            length_LayerRecords = 16 + 2 + channels * 6 + 4 + 4 + 1 + 1 + 1 + 1 + 4 + length_ExtraData;
         } catch (IOException e) {}
     }
 
