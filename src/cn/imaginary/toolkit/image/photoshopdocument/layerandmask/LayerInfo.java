@@ -1,6 +1,7 @@
 package cn.imaginary.toolkit.image.photoshopdocument.layerandmask;
 
-import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.LayerRecords;
+import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelImageData;
+import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.LayerRecords;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
@@ -38,16 +39,16 @@ public class LayerInfo {
                 LayerRecords lrecords = new LayerRecords();
                 lrecords.read(rafile);
                 System.out.println(lrecords.toString());
-
-                ChannelImageData cidata = new ChannelImageData();
+                System.out.println();
+                /*ChannelImageData cidata = new ChannelImageData();
                 cidata.read(
                     rafile,
                     lrecords.getLength(),
                     lrecords.getTop(),
                     lrecords.getLeft(),
                     lrecords.getBottom(),
-                    lrecords.getRright()
-                );
+                    lrecords.getRight()
+                );*/
             }
 
             System.out.println("location_layerinfo: " + rafile.getFilePointer());
@@ -59,7 +60,7 @@ public class LayerInfo {
 
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
-        sbuilder.append("/Layer Info Length: " + length_LayerInfo);
+        sbuilder.append("Layer Info Length: " + length_LayerInfo);
         sbuilder.append("/Layer Count: " + layerCount);
         return sbuilder.toString();
     }
