@@ -11,9 +11,7 @@ public class AdditionalLayerInformation {
     private byte[] arr_Data;
 
     private int length_AdditionalLayerInformation;
-
     private int length_Data;
-
     private int key;
 
     private String signature;
