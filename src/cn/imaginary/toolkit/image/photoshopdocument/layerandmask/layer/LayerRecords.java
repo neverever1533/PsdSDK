@@ -2,8 +2,8 @@ package cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer;
 
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelImageData;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelInfo;
-import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.mask.LayerBlendingRangesData;
-import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.mask.LayerMaskOrAdjustmentLayerData;
+// import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.mask.LayerBlendingRangesData;
+// import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.mask.LayerMaskOrAdjustmentLayerData;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
