@@ -31,11 +31,13 @@ public class ImageResources {
                 int len;
                 long point = 0;
                 while (point < length_ImageResources) {
-                    irblocks.read(rafile);
+                    irblocks.read(rafile, length_ImageResources);
                     len = irblocks.getLength();
-                    //if (irblocks.getSignature().equalsIgnoreCase(ImageResourceBlocks.Signature_ImageResourceBlocks)) {
-                    System.out.println(irblocks.toString());
-                    //}
+                    if (irblocks.getSignature().equalsIgnoreCase(ImageResourceBlocks.Signature_ImageResourceBlocks)) {
+                        System.out.println(irblocks.toString());
+                    } else {
+                        throw new IOException("wrong Image Resource Blocks signature");
+                    }
                     point += len;
                     //rafile.skipBytes(len);
                 }
