@@ -46,9 +46,21 @@ public class ImageResourceBlocks {
 
     public void read(RandomAccessFile rafile, int length) {
         try {
+            byte[] arr;
+
+            /*long sign = rafile.getFilePointer();
+			System.out.println(length);
+            arr = new byte[256];
+            rafile.read(arr);
+            for (int i = 0, len = arr.length; i < len; i++) {
+                // System.out.println(arr[i] & 0xFF);
+                System.out.println(arr[i]);
+            }
+            rafile.seek(sign);*/
+
             //3.2.1.1 signature:4
             // Signature: '8BIM'
-            byte[] arr = new byte[4];
+            arr = new byte[4];
             rafile.read(arr);
             signature = new String(arr);
 
@@ -60,47 +72,35 @@ public class ImageResourceBlocks {
             // Unique identifier for the resource. Image resource IDs contains a list of resource IDs used by Photoshop.
             id_Resource = rafile.readShort();
 
+            //3.2.1.4 Name:?
+            // Name: Pascal string, padded to make the size even (a null name consists of two bytes of 0)
             //3.2.1.3 Name Length:1
             // length_Name = rafile.readByte();
             length_Name = rafile.readByte() & 0xFF;
-
             if (length_Name == 0) {
-                length_Name = 2;
+                length_Name = 1;
             }
-            if (length_Name % 2 != 0) {
+            /*if (length_Name % 2 != 0) {
                 length_Name++;
-            }
-
-            //3.2.1.4 Name:?
-            // Name: Pascal string, padded to make the size even (a null name consists of two bytes of 0)
+            }*/
             arr = new byte[length_Name];
             rafile.read(arr);
             name = new String(arr);
 
-            long sign = rafile.getFilePointer();
-            arr = new byte[16];
-            rafile.read(arr);
-            for (int i = 0, len = arr.length; i < len; i++) {
-                // System.out.println(arr[i] & 0xFF);
-                System.out.println(arr[i]);
-            }
-            rafile.seek(sign);
-
             //3.2.1.5 Resource Data Size:4
             // Actual size of resource data that follows
             length_ResourceData = rafile.readInt();
+            // System.out.println("??? length: " + length_ResourceData);
             if (length_ResourceData % 2 != 0) {
                 length_ResourceData++;
             }
-            System.out.println("??? length: " + length_ResourceData);
 
-            int length_;
             int length_offset;
             length_offset = 4 + 2 + 1 + length_Name + 4;
-            length_ = length - length_offset;
+            /*int length_ = length - length_offset;
             if (length_ResourceData > length_) {
                 length_ResourceData = length_;
-            }
+            }*/
 
             //3.2.1.6 Resource Data:?
             // The resource data, described in the sections on the individual resource types. It is padded to make the size even.
