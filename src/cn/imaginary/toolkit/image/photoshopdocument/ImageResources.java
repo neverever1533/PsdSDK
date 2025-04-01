@@ -30,18 +30,33 @@ public class ImageResources {
                 ImageResourceBlocks irblocks = new ImageResourceBlocks();
                 int len;
                 long point = 0;
+                byte[] arr = new byte[4];
+                String signature;
                 while (point < length_ImageResources) {
-                    irblocks.read(rafile, length_ImageResources);
-                    len = irblocks.getLength();
-                    if (irblocks.getSignature().equalsIgnoreCase(ImageResourceBlocks.Signature_ImageResourceBlocks)) {
+                    // irblocks.read(rafile);
+                    // len = irblocks.getLength();
+                    rafile.read(arr);
+                    signature = new String(arr);
+                    rafile.seek(rafile.getFilePointer() - 4);
+                    if (signature.equalsIgnoreCase(ImageResourceBlocks.Signature_ImageResourceBlocks)) {
+                        irblocks.read(rafile);
+                        // irblocks.read(rafile, length_ImageResources);
+                        len = irblocks.getLength();
                         System.out.println(irblocks.toString());
                     } else {
-                        throw new IOException("wrong Image Resource Blocks signature");
+                        len = (int) (length_ImageResources - point);
+                        System.out.println("unknown data size: " + len);
+                        /*byte[] array = new byte[16];
+                        rafile.read(array);
+                        for (int i = 0, length = array.length; i < length; i++) {
+                            System.out.println(array[i]);
+                        }
+                        rafile.skipBytes(size - 16);*/
+                        // throw new IOException("wrong Image Resource Blocks signature");
                     }
                     point += len;
-                    //rafile.skipBytes(len);
+                    System.out.println("point: " + point);
                 }
-                //rafile.skipBytes((int) (length_ImageResources - point));
             }
             System.out.println("3.location_ImageResources: " + rafile.getFilePointer());
             System.out.println();
