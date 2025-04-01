@@ -2,8 +2,8 @@ package cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer;
 
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelImageData;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelInfo;
-import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.mask.LayerBlendingRangesData;
-import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.mask.LayerMaskOrAdjustmentLayerData;
+// import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.mask.LayerBlendingRangesData;
+// import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.mask.LayerMaskOrAdjustmentLayerData;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
@@ -175,12 +175,12 @@ public class LayerRecords {
             // bit 4 = pixel data irrelevant to appearance of document
             //flags = rafile.readByte() & 0xFF;
             flags = rafile.readByte();
-            is_Transparency_Protected = ((flags & 0x01) != 0);
-            is_Visible = (((flags >> 1) & 0x01) != 0);
-            is_Obsolete = (((flags >> 2) & 0x01) == 0);
-            is_Pixel_Data_Useful = (((flags >> 3) & 0x01) != 0);
+            is_Transparency_Protected = (flags & 0x01) != 0;
+            is_Visible = ((flags >> 1) & 0x01) != 0;
+            is_Obsolete = ((flags >> 2) & 0x01) == 0;
+            is_Pixel_Data_Useful = ((flags >> 3) & 0x01) != 0;
             if (is_Pixel_Data_Useful) {
-                is_Pixel_Data_Irrelevant = (((flags >> 4) & 0x01) != 0);
+                is_Pixel_Data_Irrelevant = ((flags >> 4) & 0x01) != 0;
             }
 
             //4.2.3.9 Filler:1
