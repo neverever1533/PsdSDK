@@ -1,5 +1,6 @@
 package cn.imaginary.toolkit.image.photoshopdocument.imageresources;
 
+// import cn.imaginary.toolkit.image.photoshopdocument.imageresources.ImageResourceIDs;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
@@ -15,6 +16,7 @@ public class ImageResourceBlocks {
     private int length_Name;
 
     private String name;
+    private byte[] arr_Name;
 
     private int length_ResourceData;
 
@@ -36,6 +38,10 @@ public class ImageResourceBlocks {
         return name;
     }
 
+    public byte[] getNameBytes() {
+        return arr_Name;
+    }
+
     public int getLengthResourceData() {
         return length_ResourceData;
     }
@@ -44,7 +50,6 @@ public class ImageResourceBlocks {
         return length_ImageResourceBlocks;
     }
 
-    // public void read(RandomAccessFile rafile, int length) {
     public void read(RandomAccessFile rafile) {
         try {
             byte[] arr;
@@ -86,16 +91,16 @@ public class ImageResourceBlocks {
                 length_Name++;
             }
 
-            arr = new byte[length_Name];
-            rafile.read(arr);
-            name = new String(arr);
+            arr_Name = new byte[length_Name];
+            rafile.read(arr_Name);
+            name = new String(arr_Name);
             // name = new String(arr, "utf-8");
             // name = new String(arr, "utf-16");
 
             //3.2.1.5 Resource Data Size:4
             // Actual size of resource data that follows
             length_ResourceData = rafile.readInt();
-            System.out.println("??? length: " + length_ResourceData);
+            System.out.println("Resource Data length: " + length_ResourceData);
             if (length_ResourceData % 2 != 0) {
                 // length_ResourceData++;
                 rafile.skipBytes(1);
@@ -103,10 +108,6 @@ public class ImageResourceBlocks {
 
             int length_offset;
             length_offset = 4 + 2 + 1 + length_Name + 4;
-            /*int length_ = length - length_offset;
-            if (length_ResourceData > length_) {
-                length_ResourceData = length_;
-            }*/
 
             //3.2.1.6 Resource Data:?
             // The resource data, described in the sections on the individual resource types. It is padded to make the size even.
