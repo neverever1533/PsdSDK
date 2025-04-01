@@ -44,12 +44,13 @@ public class ImageResourceBlocks {
         return length_ImageResourceBlocks;
     }
 
-    public void read(RandomAccessFile rafile, int length) {
+    // public void read(RandomAccessFile rafile, int length) {
+    public void read(RandomAccessFile rafile) {
         try {
             byte[] arr;
 
             /*long sign = rafile.getFilePointer();
-			System.out.println(length);
+			      System.out.println(length);
             arr = new byte[256];
             rafile.read(arr);
             for (int i = 0, len = arr.length; i < len; i++) {
@@ -65,6 +66,7 @@ public class ImageResourceBlocks {
             signature = new String(arr);
 
             if (!signature.equalsIgnoreCase(Signature_ImageResourceBlocks)) {
+                rafile.seek(rafile.getFilePointer() - 4);
                 throw new IOException("wrong Image Resource Blocks signature");
             }
 
@@ -90,9 +92,10 @@ public class ImageResourceBlocks {
             //3.2.1.5 Resource Data Size:4
             // Actual size of resource data that follows
             length_ResourceData = rafile.readInt();
-            // System.out.println("??? length: " + length_ResourceData);
+            System.out.println("??? length: " + length_ResourceData);
             if (length_ResourceData % 2 != 0) {
-                length_ResourceData++;
+                // length_ResourceData++;
+                rafile.skipBytes(1);
             }
 
             int length_offset;
@@ -104,9 +107,11 @@ public class ImageResourceBlocks {
 
             //3.2.1.6 Resource Data:?
             // The resource data, described in the sections on the individual resource types. It is padded to make the size even.
-            ImageResourceIDs irIDs = new ImageResourceIDs();
-            irIDs.read(rafile, length_ResourceData, id_Resource);
+            rafile.skipBytes(length_ResourceData);
+            /*ImageResourceIDs irIDs = new ImageResourceIDs();
+            irIDs.read(rafile, length_ResourceData, id_Resource);*/
 
+            // System.out.println(toString());
             length_ImageResourceBlocks = length_offset + length_ResourceData;
         } catch (IOException e) {}
     }
