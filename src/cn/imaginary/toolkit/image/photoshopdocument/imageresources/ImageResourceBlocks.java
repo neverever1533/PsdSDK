@@ -79,15 +79,18 @@ public class ImageResourceBlocks {
             //3.2.1.3 Name Length:1
             // length_Name = rafile.readByte();
             length_Name = rafile.readByte() & 0xFF;
-            if (length_Name == 0) {
+            /*if (length_Name == 0) {
                 length_Name = 1;
-            }
-            /*if (length_Name % 2 != 0) {
-                length_Name++;
             }*/
+            if (length_Name % 2 == 0) {
+                length_Name++;
+            }
+
             arr = new byte[length_Name];
             rafile.read(arr);
             name = new String(arr);
+            // name = new String(arr, "utf-8");
+            // name = new String(arr, "utf-16");
 
             //3.2.1.5 Resource Data Size:4
             // Actual size of resource data that follows
