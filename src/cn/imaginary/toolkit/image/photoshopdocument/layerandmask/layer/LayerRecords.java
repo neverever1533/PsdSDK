@@ -2,8 +2,8 @@ package cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer;
 
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelImageData;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelInfo;
-// import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.mask.LayerBlendingRangesData;
-// import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.mask.LayerMaskOrAdjustmentLayerData;
+import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.mask.LayerBlendingRangesData;
+import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.mask.LayerMaskOrAdjustmentLayerData;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
@@ -24,7 +24,14 @@ public class LayerRecords {
 
     private int opacity;
     private int clipping;
+
     private int flags;
+    private boolean is_Transparency_Protected;
+    private boolean is_Visible;
+    private boolean is_Obsolete;
+    private boolean is_Pixel_Data_Useful;
+    private boolean is_Pixel_Data_Irrelevant;
+
     private int filler;
     private int length_ExtraData;
 
@@ -72,6 +79,26 @@ public class LayerRecords {
 
     public int getFlags() {
         return flags;
+    }
+
+    public boolean isTransparencyProtected() {
+        return is_Transparency_Protected;
+    }
+
+    public boolean isVisible() {
+        return is_Visible;
+    }
+
+    public boolean isObsolete() {
+        return is_Obsolete;
+    }
+
+    public boolean isPixelDataUseful() {
+        return is_Pixel_Data_Useful;
+    }
+
+    public boolean isPixelDataIrrelevant() {
+        return is_Pixel_Data_Irrelevant;
     }
 
     public int getFiller() {
@@ -146,8 +173,15 @@ public class LayerRecords {
             // bit 2 = obsolete;
             // bit 3 = 1 for Photoshop 5.0 and later, tells if bit 4 has useful information;
             // bit 4 = pixel data irrelevant to appearance of document
-            flags = rafile.readByte();
             //flags = rafile.readByte() & 0xFF;
+            flags = rafile.readByte();
+            is_Transparency_Protected = ((flags & 0x01) != 0);
+            is_Visible = (((flags >> 1) & 0x01) != 0);
+            is_Obsolete = (((flags >> 2) & 0x01) == 0);
+            is_Pixel_Data_Useful = (((flags >> 3) & 0x01) != 0);
+            if (is_Pixel_Data_Useful) {
+                is_Pixel_Data_Irrelevant = (((flags >> 4) & 0x01) != 0);
+            }
 
             //4.2.3.9 Filler:1
             // Filler (zero)
@@ -197,6 +231,11 @@ public class LayerRecords {
         sbuilder.append("/Opacity: " + opacity);
         sbuilder.append("/Clipping: " + clipping);
         sbuilder.append("/Flags: " + flags);
+        sbuilder.append("/is_Transparency_Protected: " + is_Transparency_Protected);
+        sbuilder.append("/is_Visible: " + is_Visible);
+        sbuilder.append("/is_Obsolete: " + is_Obsolete);
+        sbuilder.append("/is_Pixel_Data_Useful: " + is_Pixel_Data_Useful);
+        sbuilder.append("/is_Pixel_Data_Irrelevant: " + is_Pixel_Data_Irrelevant);
         sbuilder.append("/Filler: " + filler);
         sbuilder.append("/Extra Data Length: " + length_ExtraData);
         return sbuilder.toString();
