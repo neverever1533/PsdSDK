@@ -12,13 +12,18 @@ public class AdditionalLayerInformation {
 
     private int length_AdditionalLayerInformation;
     private int length_Data;
-    private int key;
+
+    private String key;
 
     private String signature;
     public static String signature_AdditionalLayerInformation = "8BIM";
     public static String signature_AdditionalLayerInformation_ = "8B64";
 
-    private int getLength() {
+    public String getKey() {
+        return key;
+    }
+
+    public int getLength() {
         return length_AdditionalLayerInformation;
     }
 
@@ -32,7 +37,7 @@ public class AdditionalLayerInformation {
             byte[] arr = new byte[4];
             rafile.read(arr);
             signature = new String(arr);
-            System.out.println("signature: " + signature);
+
             if (
                 !(signature.equalsIgnoreCase(signature_AdditionalLayerInformation) ||
                     signature.equalsIgnoreCase(signature_AdditionalLayerInformation_))
@@ -42,8 +47,10 @@ public class AdditionalLayerInformation {
 
             //4.4.2 Key：4
             //Key: a 4-character code (See individual sections)
-            key = rafile.readInt();
-            System.out.println("key: " + key);
+            // key = rafile.readInt();
+            arr = new byte[4];
+            rafile.read(arr);
+            key = new String(arr);
 
             //4.4.3 Data below Length：4
             //Length data below, rounded up to an even byte count.
@@ -52,7 +59,6 @@ public class AdditionalLayerInformation {
             if (length_Data % 2 != 0) {
                 length_Data++;
             }
-            System.out.println("length_Data: " + length_Data);
 
             //4.4.4 Data：?
             // Data (See individual sections)
@@ -66,5 +72,13 @@ public class AdditionalLayerInformation {
 
             rafile.seek(location + getLength());
         } catch (IOException e) {}
+    }
+
+    public String toString() {
+        StringBuilder sbuilder = new StringBuilder();
+        sbuilder.append("signature: " + signature);
+        sbuilder.append("/key: " + key);
+        sbuilder.append("/length_Data: " + length_Data);
+        return sbuilder.toString();
     }
 }
