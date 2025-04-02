@@ -48,7 +48,6 @@ public class AdditionalLayerInformation {
 
             //4.4.2 Key：4
             //Key: a 4-character code (See individual sections)
-            // key = rafile.readInt();
             arr = new byte[4];
             rafile.read(arr);
             key = new String(arr);
@@ -67,7 +66,7 @@ public class AdditionalLayerInformation {
 
             //4.4.4 Data：?
             // Data (See individual sections)
-            rafile.skipBytes(length_Data);
+            // rafile.skipBytes(length_Data);
             /*arr_Data = new byte[length_Data];
             rafile.read(arr_Data);
             if (length_Data > 0) {
