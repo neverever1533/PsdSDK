@@ -1,6 +1,8 @@
 package cn.imaginary.toolkit.image.photoshopdocument.imageresources;
 
 // import cn.imaginary.toolkit.image.photoshopdocument.imageresources.ImageResourceIDs;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
@@ -100,20 +102,22 @@ public class ImageResourceBlocks {
             //3.2.1.5 Resource Data Size:4
             // Actual size of resource data that follows
             length_ResourceData = rafile.readInt();
-            System.out.println("Resource Data length: " + length_ResourceData);
-            if (length_ResourceData % 2 != 0) {
-                // length_ResourceData++;
-                rafile.skipBytes(1);
-            }
 
             int length_offset;
             length_offset = 4 + 2 + 1 + length_Name + 4;
 
             //3.2.1.6 Resource Data:?
             // The resource data, described in the sections on the individual resource types. It is padded to make the size even.
-            rafile.skipBytes(length_ResourceData);
+             rafile.skipBytes(length_ResourceData);
+
             /*ImageResourceIDs irIDs = new ImageResourceIDs();
             irIDs.read(rafile, length_ResourceData, id_Resource);*/
+
+            if (length_ResourceData % 2 != 0) {
+                // length_ResourceData++;
+                // rafile.skipBytes(1);
+                System.out.println("skip byte: " + rafile.readByte());
+            }
 
             // System.out.println(toString());
             length_ImageResourceBlocks = length_offset + length_ResourceData;
@@ -122,7 +126,8 @@ public class ImageResourceBlocks {
 
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
-        sbuilder.append("signature: " + signature);
+        sbuilder.append("Image Resource Blocks Length: " + getLength());
+        sbuilder.append("/Signature: " + signature);
         sbuilder.append("/Resource ID :" + id_Resource);
         sbuilder.append("/Name Length: " + length_Name);
         sbuilder.append("/Name: " + name);
