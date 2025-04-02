@@ -1,5 +1,6 @@
 package cn.imaginary.toolkit.image.photoshopdocument.layerandmask;
 
+import cn.imaginary.toolkit.image.photoshopdocument.FileHeader;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
@@ -10,8 +11,8 @@ public class AdditionalLayerInformation {
 
     private byte[] arr_Data;
 
-    private int length_AdditionalLayerInformation;
-    private int length_Data;
+    private long length_AdditionalLayerInformation;
+    private long length_Data;
 
     private String key;
 
@@ -23,11 +24,11 @@ public class AdditionalLayerInformation {
         return key;
     }
 
-    public int getLength() {
+    public long getLength() {
         return length_AdditionalLayerInformation;
     }
 
-    public void read(RandomAccessFile rafile) {
+    public void read(RandomAccessFile rafile, FileHeader fheader) {
         try {
             //4.4 Additional Layer Information: ?
             long location = rafile.getFilePointer();
@@ -55,19 +56,23 @@ public class AdditionalLayerInformation {
             //4.4.3 Data below Length：4
             //Length data below, rounded up to an even byte count.
             // (**PSB**, the following keys have a length count of 8 bytes: LMsk, Lr16, Lr32, Layr, Mt16, Mt32, Mtrn, Alph, FMsk, lnk2, FEid, FXid, PxSD.
-            length_Data = rafile.readInt();
+            if (fheader.isFilePsb()) {
+                length_Data = rafile.readLong();
+            } else {
+                length_Data = rafile.readInt();
+            }
             if (length_Data % 2 != 0) {
                 length_Data++;
             }
 
             //4.4.4 Data：?
             // Data (See individual sections)
-            arr_Data = new byte[length_Data];
+            rafile.skipBytes(length_Data);
+            /*arr_Data = new byte[length_Data];
             rafile.read(arr_Data);
-
             if (length_Data > 0) {
-                System.out.println("data preview: " + arr_Data[0] + "/...");
-            }
+                System.out.println("data preview: " + arr_Data[0]);
+            }*/
 
             length_AdditionalLayerInformation = 4 + 4 + 4 + length_Data;
 
