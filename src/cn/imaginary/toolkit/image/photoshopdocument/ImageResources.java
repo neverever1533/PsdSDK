@@ -22,7 +22,6 @@ public class ImageResources {
             //3.1 Image Resources length:4
             // Length of image resource section. The length may be zero.
             length_ImageResources = rafile.readInt();
-            System.out.println("length_ImageResources: " + length_ImageResources);
 
             if (length_ImageResources > 0) {
                 // Image resources (Image Resource Blocks ):?
@@ -43,23 +42,16 @@ public class ImageResources {
                         // irblocks.read(rafile, length_ImageResources);
                         len = irblocks.getLength();
                         System.out.println(irblocks.toString());
+                        System.out.println();
                     } else {
                         len = (int) (length_ImageResources - point);
                         System.out.println("unknown data size: " + len);
-                        /*byte[] array = new byte[16];
-                        rafile.read(array);
-                        for (int i = 0, length = array.length; i < length; i++) {
-                            System.out.println(array[i]);
-                        }
-                        rafile.skipBytes(size - 16);*/
-                        // throw new IOException("wrong Image Resource Blocks signature");
+                        rafile.skipBytes(len);
                     }
                     point += len;
                     System.out.println("point: " + point);
                 }
             }
-            System.out.println("3.location_ImageResources: " + rafile.getFilePointer());
-            System.out.println();
 
             rafile.seek(location + getLength());
         } catch (IOException e) {}
@@ -67,7 +59,7 @@ public class ImageResources {
 
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
-        sbuilder.append("Image Resources Length: " + length_ImageResources);
+        sbuilder.append("Image Resources Length: " + getLength());
         return sbuilder.toString();
     }
 }
