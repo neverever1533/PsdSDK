@@ -1,9 +1,10 @@
 package cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer;
 
+import cn.imaginary.toolkit.image.photoshopdocument.FileHeader;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelImageData;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelInfo;
-// import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.mask.LayerBlendingRangesData;
-// import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.mask.LayerMaskOrAdjustmentLayerData;
+import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.mask.LayerBlendingRangesData;
+import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.mask.LayerMaskOrAdjustmentLayerData;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
@@ -36,6 +37,8 @@ public class LayerRecords {
     private int length_ExtraData;
 
     private String name_Layer;
+
+    private byte[] arr_Name_Layer;
 
     public int getLength() {
         return length_LayerRecords;
@@ -113,8 +116,13 @@ public class LayerRecords {
         return name_Layer;
     }
 
-    public void read(RandomAccessFile rafile) {
+    public byte[] getLayerNameBytes() {
+        return arr_Name_Layer;
+    }
+
+    public void read(RandomAccessFile rafile, FileHeader fheader) {
         try {
+            long location = rafile.getFilePointer();
             //4.2.3.1 Rectangle:4*4
             // Rectangle containing the contents of the layer. Specified as top, left, bottom, right coordinates
             top = rafile.readInt();
@@ -128,7 +136,7 @@ public class LayerRecords {
 
             //4.2.3.3 Channel Info ?
             int id;
-            int length;
+            long length_ChannelInfo;
             for (int j = 0; j < channels; j++) {
                 // Channel information. Six bytes per channel, consisting of:
                 // 2 bytes for Channel ID: 0 = red, 1 = green, etc.;
@@ -140,10 +148,16 @@ public class LayerRecords {
 
                 //4.2.3.3.2 Channel Data Length:4
                 // 4 bytes for length of corresponding channel data. (**PSB** 8 bytes for length of corresponding channel data.) See See Channel image data for structure of channel data.
-                length = rafile.readInt();
-                cinfo.setLength(length);
+                if (!fheader.isFilePsb()) {
+                    length_ChannelInfo = rafile.readInt();
+                } else {
+                    length_ChannelInfo = rafile.readLong();
+                }
+                cinfo.setLength(length_ChannelInfo);
                 System.out.println(cinfo.toString());
+                System.out.println();
             }
+
             //4.2.3.4 Blend Mode Signature:4
             // Blend mode signature: '8BIM
             byte[] arr = new byte[4];
@@ -192,39 +206,44 @@ public class LayerRecords {
             // Length of the extra data field ( = the total length of the next five fields).
             length_ExtraData = rafile.readInt();
 
-            rafile.skipBytes(length_ExtraData);
+            // rafile.skipBytes(length_ExtraData);
 
             //4.2.3.11 Extra Data ?(Layer mask / adjustment layer data)
             // Layer mask data: See See Layer mask / adjustment layer data for structure. Can be 40 bytes, 24 bytes, or 4 bytes if no layer mask
-            /*LayerMaskOrAdjustmentLayerData lmoaldata = new LayerMaskOrAdjustmentLayerData();
+            LayerMaskOrAdjustmentLayerData lmoaldata = new LayerMaskOrAdjustmentLayerData();
             lmoaldata.read(rafile);
-            int length_lmoaldata = lmoaldata.getLength();*/
+            int length_lmoaldata = lmoaldata.getLength();
+            System.out.println(lmoaldata.toString());
+            System.out.println();
 
             //4.2.3.12 Layer Blending Ranges:?
             // Layer blending ranges: See See Layer blending ranges data.
-            /*LayerBlendingRangesData lbrdata = new LayerBlendingRangesData();
+            LayerBlendingRangesData lbrdata = new LayerBlendingRangesData();
             lbrdata.read(rafile);
-            int length_lbrdata = lbrdata.getLength();*/
+            int length_lbrdata = lbrdata.getLength();
+            System.out.println(lbrdata.toString());
+            System.out.println();
 
             //4.2.3.13 Layer Name:?
             // Layer name: Pascal string, padded to a multiple of 4 bytes.
-            /*int length_Name = length_ExtraData - length_lmoaldata - length_lbrdata;
+            int length_Name = length_ExtraData - length_lmoaldata - length_lbrdata;
             if (length_Name > 0) {
-                arr = new byte[length_Name];
-                rafile.read(arr);
+                arr_Name_Layer = new byte[length_Name];
+                rafile.read(arr_Name_Layer);
                 name_Layer = new String(arr);
             } else {
-                length_Name = 0;
-            }*/
+                name_Layer = "";
+            }
 
-            //length_LayerRecords = 16 + 2 + channels * 6 + 4 + 4 + 1 + 1 + 1 + 1 + 4 + length_ExtraData + length_Name;
             length_LayerRecords = 16 + 2 + channels * 6 + 4 + 4 + 1 + 1 + 1 + 1 + 4 + length_ExtraData;
+            rafile.seek(location + getLength());
         } catch (IOException e) {}
     }
 
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
-        sbuilder.append("Top: " + top + "/Left: " + left + "/Bottom: " + bottom + "/Right: " + right);
+        sbuilder.append("Layer Records Length: " + getLength());
+        sbuilder.append("/Top: " + top + "/Left: " + left + "/Bottom: " + bottom + "/Right: " + right);
         sbuilder.append("/Channels: " + channels);
         sbuilder.append("/Signature: " + signature);
         sbuilder.append("/BlendMode: " + blendMode);
@@ -238,6 +257,7 @@ public class LayerRecords {
         sbuilder.append("/is_Pixel_Data_Irrelevant: " + is_Pixel_Data_Irrelevant);
         sbuilder.append("/Filler: " + filler);
         sbuilder.append("/Extra Data Length: " + length_ExtraData);
+        sbuilder.append("/Layer Name: " + name_Layer);
         return sbuilder.toString();
     }
 }
