@@ -65,10 +65,11 @@ public class AdditionalLayerInformation {
             arr_Data = new byte[length_Data];
             rafile.read(arr_Data);
 
-            length_AdditionalLayerInformation = 4 + 4 + 4 + length_Data;
+            if (length_Data > 0) {
+                System.out.println("data preview: " + arr_Data[0] + "/...");
+            }
 
-            System.out.println("location_globallayermaskinfo: " + rafile.getFilePointer());
-            System.out.println();
+            length_AdditionalLayerInformation = 4 + 4 + 4 + length_Data;
 
             rafile.seek(location + getLength());
         } catch (IOException e) {}
@@ -76,7 +77,8 @@ public class AdditionalLayerInformation {
 
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
-        sbuilder.append("signature: " + signature);
+        sbuilder.append("Additional Layer Information Length: " + getLength());
+        sbuilder.append("/signature: " + signature);
         sbuilder.append("/key: " + key);
         sbuilder.append("/length_Data: " + length_Data);
         return sbuilder.toString();
