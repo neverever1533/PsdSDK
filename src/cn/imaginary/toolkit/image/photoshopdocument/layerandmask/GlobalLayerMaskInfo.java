@@ -91,16 +91,13 @@ public class GlobalLayerMaskInfo {
             // rafile.skipBytes(length_Filler);
             // filler = 0;
 
-            System.out.println("location_globallayermaskinfo: " + rafile.getFilePointer());
-            System.out.println();
-
             rafile.seek(location + getLength());
         } catch (IOException e) {}
     }
 
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
-        sbuilder.append("length_GlobalLayerMaskInfo: " + length_GlobalLayerMaskInfo);
+        sbuilder.append("Global Layer Mask Info Length: " + getLength());
         sbuilder.append("/overlayColorSpace: " + overlayColorSpace);
         sbuilder.append("/color: " + red + "/" + green + "/" + blue + "/" + alpha);
         sbuilder.append("/opacity: " + opacity);
