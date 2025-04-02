@@ -48,7 +48,7 @@ public class LayerAndMaskInformation {
             // (Photoshop 4.0 and later)
             // Series of tagged blocks containing various types of data. See See Additional Layer Information for the list of the types of data that can be included here.
             AdditionalLayerInformation alinfo = new AdditionalLayerInformation();
-            alinfo.read(rafile);
+            alinfo.read(rafile, fheader);
             System.out.println(alinfo.toString());
             System.out.println();
 
