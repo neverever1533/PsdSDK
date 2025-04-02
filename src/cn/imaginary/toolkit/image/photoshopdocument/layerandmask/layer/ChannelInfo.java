@@ -11,7 +11,7 @@ public class ChannelInfo {
     public static int ID_Alpha = -1;
     public static int ID_Mask = -2;
 
-    private int length;
+    private long length;
 
     private byte[] arr_DataCompressed;
 
@@ -19,7 +19,7 @@ public class ChannelInfo {
         return id;
     }
 
-    public int getLength() {
+    public long getLength() {
         return length;
     }
 
@@ -31,7 +31,7 @@ public class ChannelInfo {
         this.id = id;
     }
 
-    public void setLength(int length) {
+    public void setLength(long length) {
         this.length = length;
     }
 
@@ -41,8 +41,8 @@ public class ChannelInfo {
 
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
-        sbuilder.append("ID: " + id);
-        sbuilder.append("/Length: " + length);
+        sbuilder.append("Channel Info Length: " + length);
+        sbuilder.append("/ID: " + id);
         return sbuilder.toString();
     }
 }
