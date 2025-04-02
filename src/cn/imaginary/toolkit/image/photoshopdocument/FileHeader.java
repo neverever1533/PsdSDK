@@ -16,6 +16,8 @@ public class FileHeader {
     public static int Version_PSB = 2;
     private String[] arr_Version_Name = { "PSD", "PSB" };
 
+    private boolean is_File_Psb = false;
+
     private int reserved;
 
     private int channels;
@@ -45,6 +47,10 @@ public class FileHeader {
         } else {
             return unknown;
         }
+    }
+
+    public boolean isFilePsb() {
+        return is_File_Psb;
     }
 
     public int getChannels() {
@@ -87,7 +93,11 @@ public class FileHeader {
             //1.2 Version:2
             //Version: always equal to 1. Do not try to read the file if the version does not match this value. (**PSB** version is 2.)
             version = rafile.readShort();
-            if (version == Version_PSD || version == Version_PSB) {} else {
+            if (version == Version_PSD) {
+                is_File_Psb = false;
+            } else if (version == Version_PSB) {
+                is_File_Psb = true;
+            } else {
                 throw new IOException("version does not match.");
             }
 
@@ -110,8 +120,8 @@ public class FileHeader {
             // (**PSB** max of 300,000.)
             height_Header = rafile.readInt();
             if (
-                (version == Version_PSD && height_Header >= pixels_Min && height_Header <= pixels_Max_PSD) ||
-                (version == Version_PSB && height_Header >= pixels_Min && height_Header <= pixels_Max_PSB)
+                (!is_File_Psb && height_Header >= pixels_Min && height_Header <= pixels_Max_PSD) ||
+                (is_File_Psb && height_Header >= pixels_Min && height_Header <= pixels_Max_PSB)
             ) {} else {
                 throw new IOException("the height of the image in pixels is wrong.");
             }
@@ -121,8 +131,8 @@ public class FileHeader {
             // (*PSB** max of 300,000)
             width_Header = rafile.readInt();
             if (
-                (version == Version_PSD && width_Header >= pixels_Min && width_Header <= pixels_Max_PSD) ||
-                (version == Version_PSB && width_Header >= pixels_Min && width_Header <= pixels_Max_PSB)
+                (!is_File_Psb && width_Header >= pixels_Min && width_Header <= pixels_Max_PSD) ||
+                (is_File_Psb && width_Header >= pixels_Min && width_Header <= pixels_Max_PSB)
             ) {} else {
                 throw new IOException("the width of the image in pixels is wrong.");
             }
@@ -167,16 +177,14 @@ public class FileHeader {
                     throw new IOException("the number of bits per channel is not supported.");
             }
 
-            System.out.println("1.location_FileHeader: " + rafile.getFilePointer());
-            System.out.println();
-
             rafile.seek(location + getLength());
         } catch (IOException e) {}
     }
 
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
-        sbuilder.append("Signature: " + signature);
+        sbuilder.append("FileHeader Length: " + getLength());
+        sbuilder.append("/Signature: " + signature);
         sbuilder.append("/Version: " + getVersion());
         sbuilder.append("/Resvered: " + reserved);
         sbuilder.append("/Channels: " + getChannels());
