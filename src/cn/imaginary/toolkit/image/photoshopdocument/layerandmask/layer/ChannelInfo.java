@@ -4,45 +4,45 @@ public class ChannelInfo {
 
     public ChannelInfo() {}
 
-    private int id;
-    public static int ID_Red = 0;
-    public static int ID_Green = 1;
-    public static int ID_Blue = 2;
-    public static int ID_Alpha = -1;
-    public static int ID_Mask = -2;
+    private int id_Channel;
+    public static int ID_Channel_Red = 0;
+    public static int ID_Channel_Green = 1;
+    public static int ID_Channel_Blue = 2;
+    public static int ID_Channel_Alpha = -1;
+    public static int ID_Channel_Mask = -2;
 
-    private long length;
+    private long length_ChannelData;
 
     private byte[] arr_DataCompressed;
 
-    public int getID() {
-        return id;
+    public int getChannelID() {
+        return id_Channel;
     }
 
-    public long getLength() {
-        return length;
+    public long getChannelDataLength() {
+        return length_ChannelData;
     }
 
-    public byte[] getDataCompressed() {
+    public byte[] getChannelDataCompressed() {
         return arr_DataCompressed;
     }
 
-    public void setID(int id) {
-        this.id = id;
+    public void setChannelID(int id) {
+        id_Channel = id;
     }
 
-    public void setLength(long length) {
-        this.length = length;
+    public void setChannelDataLength(long length) {
+        length_ChannelData = length;
     }
 
-    public void setDataCompressed(byte[] arr) {
-        arr_DataCompressed = arr;
+    public void setChannelDataCompressed(byte[] array) {
+        arr_DataCompressed = array;
     }
 
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
-        sbuilder.append("Channel Info Length: " + length);
-        sbuilder.append("/ID: " + id);
+        sbuilder.append("Channel ID: " + id_Channel);
+        sbuilder.append("/Channel Data Length: " + length_ChannelData);
         return sbuilder.toString();
     }
 }
