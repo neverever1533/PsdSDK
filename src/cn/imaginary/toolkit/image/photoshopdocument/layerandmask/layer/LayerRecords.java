@@ -132,6 +132,7 @@ public class LayerRecords {
     public void read(RandomAccessFile rafile, FileHeader fheader) {
         try {
             long location = rafile.getFilePointer();
+
             //4.2.3.1 Rectangle:4*4
             // Rectangle containing the contents of the layer. Specified as top, left, bottom, right coordinates
             top = rafile.readInt();
@@ -145,7 +146,7 @@ public class LayerRecords {
 
             //4.2.3.3 Channel Info ?
             int id_Channel;
-            long length_ChannelInfo;
+            long length_ChannelData;
             arrayList_ChannelInfo = new ArrayList<ChannelInfo>();
             for (int j = 0; j < channels; j++) {
                 // Channel information. Six bytes per channel, consisting of:
@@ -154,16 +155,16 @@ public class LayerRecords {
                 //4.2.3.3.1 Channel ID:2
                 id_Channel = rafile.readShort();
                 ChannelInfo cinfo = new ChannelInfo();
-                cinfo.setID(id_Channel);
+                cinfo.setChannelID(id_Channel);
 
                 //4.2.3.3.2 Channel Data Length:4
                 // 4 bytes for length of corresponding channel data. (**PSB** 8 bytes for length of corresponding channel data.) See See Channel image data for structure of channel data.
-                if (!fheader.isFilePsb()) {
-                    length_ChannelInfo = rafile.readInt();
+                if (fheader.isFilePsb()) {
+                    length_ChannelData = rafile.readLong();
                 } else {
-                    length_ChannelInfo = rafile.readLong();
+                    length_ChannelData = rafile.readInt();
                 }
-                cinfo.setLength(length_ChannelInfo);
+                cinfo.setChannelDataLength(length_ChannelData);
 
                 arrayList_ChannelInfo.add(j, cinfo);
 
@@ -218,11 +219,6 @@ public class LayerRecords {
             // Length of the extra data field ( = the total length of the next five fields).
             length_ExtraData = rafile.readInt();
 
-            // rafile.skipBytes(length_ExtraData);
-            /*arr = new byte[length_ExtraData];
-            rafile.read(arr);
-            codePreview(arr);*/
-
             //4.2.3.11 Extra Data ?(Layer mask / adjustment layer data)
             // Layer mask data: See See Layer mask / adjustment layer data for structure. Can be 40 bytes, 24 bytes, or 4 bytes if no layer mask
             LayerMaskOrAdjustmentLayerData lmoaldata = new LayerMaskOrAdjustmentLayerData();
@@ -272,15 +268,5 @@ public class LayerRecords {
         sbuilder.append("/Extra Data Length: " + length_ExtraData);
         sbuilder.append("/Layer Name: " + name_Layer);
         return sbuilder.toString();
-    }
-
-    private void codePreview(byte[] array) {
-        ByteArrayInputStream baistream = new ByteArrayInputStream(array);
-        DataInputStream distream = new DataInputStream(baistream);
-        try {
-            // System.out.println("preview: " + distream.readByte());
-            System.out.println("preview: " + distream.readInt());
-            distream.close();
-        } catch (IOException e) {}
     }
 }
