@@ -5,8 +5,11 @@ import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelIm
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelInfo;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.mask.LayerBlendingRangesData;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.mask.LayerMaskOrAdjustmentLayerData;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
 
 public class LayerRecords {
 
@@ -18,6 +21,8 @@ public class LayerRecords {
     private int bottom;
     private int right;
     private int channels;
+
+    private ArrayList<ChannelInfo> arrayList_ChannelInfo;
 
     private String signature;
     public static String Signature_BlendMode = "8BIM";
@@ -62,6 +67,10 @@ public class LayerRecords {
 
     public int getChannels() {
         return channels;
+    }
+
+    public ArrayList<ChannelInfo> getChannelInfoArrayList() {
+        return arrayList_ChannelInfo;
     }
 
     public String getSignature() {
@@ -135,16 +144,17 @@ public class LayerRecords {
             channels = rafile.readShort();
 
             //4.2.3.3 Channel Info ?
-            int id;
+            int id_Channel;
             long length_ChannelInfo;
+            arrayList_ChannelInfo = new ArrayList<ChannelInfo>();
             for (int j = 0; j < channels; j++) {
                 // Channel information. Six bytes per channel, consisting of:
                 // 2 bytes for Channel ID: 0 = red, 1 = green, etc.;
                 // -1 = transparency mask; -2 = user supplied layer mask, -3 real user supplied layer mask (when both a user mask and a vector mask are present)
                 //4.2.3.3.1 Channel ID:2
-                id = rafile.readShort();
+                id_Channel = rafile.readShort();
                 ChannelInfo cinfo = new ChannelInfo();
-                cinfo.setID(id);
+                cinfo.setID(id_Channel);
 
                 //4.2.3.3.2 Channel Data Length:4
                 // 4 bytes for length of corresponding channel data. (**PSB** 8 bytes for length of corresponding channel data.) See See Channel image data for structure of channel data.
@@ -154,8 +164,10 @@ public class LayerRecords {
                     length_ChannelInfo = rafile.readLong();
                 }
                 cinfo.setLength(length_ChannelInfo);
+
+                arrayList_ChannelInfo.add(j, cinfo);
+
                 System.out.println(cinfo.toString());
-                System.out.println();
             }
 
             //4.2.3.4 Blend Mode Signature:4
@@ -207,6 +219,9 @@ public class LayerRecords {
             length_ExtraData = rafile.readInt();
 
             // rafile.skipBytes(length_ExtraData);
+            /*arr = new byte[length_ExtraData];
+            rafile.read(arr);
+            codePreview(arr);*/
 
             //4.2.3.11 Extra Data ?(Layer mask / adjustment layer data)
             // Layer mask data: See See Layer mask / adjustment layer data for structure. Can be 40 bytes, 24 bytes, or 4 bytes if no layer mask
@@ -214,7 +229,6 @@ public class LayerRecords {
             lmoaldata.read(rafile);
             int length_lmoaldata = lmoaldata.getLength();
             System.out.println(lmoaldata.toString());
-            System.out.println();
 
             //4.2.3.12 Layer Blending Ranges:?
             // Layer blending ranges: See See Layer blending ranges data.
@@ -222,7 +236,6 @@ public class LayerRecords {
             lbrdata.read(rafile);
             int length_lbrdata = lbrdata.getLength();
             System.out.println(lbrdata.toString());
-            System.out.println();
 
             //4.2.3.13 Layer Name:?
             // Layer name: Pascal string, padded to a multiple of 4 bytes.
@@ -259,5 +272,15 @@ public class LayerRecords {
         sbuilder.append("/Extra Data Length: " + length_ExtraData);
         sbuilder.append("/Layer Name: " + name_Layer);
         return sbuilder.toString();
+    }
+
+    private void codePreview(byte[] array) {
+        ByteArrayInputStream baistream = new ByteArrayInputStream(array);
+        DataInputStream distream = new DataInputStream(baistream);
+        try {
+            // System.out.println("preview: " + distream.readByte());
+            System.out.println("preview: " + distream.readInt());
+            distream.close();
+        } catch (IOException e) {}
     }
 }
