@@ -5,6 +5,7 @@ import cn.imaginary.toolkit.image.photoshopdocument.FileHeader;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.LayerRecords;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
 
 public class LayerInfo {
 
@@ -14,12 +15,18 @@ public class LayerInfo {
     private int length_LayerInfo;
     private int layerCount;
 
+    private ArrayList<LayerRecords> arrayList_LayerRecords;
+
     public int getLength() {
         return 4 + length_LayerInfo;
     }
 
     public int getLayerCount() {
         return layerCount;
+    }
+
+    public ArrayList<LayerRecords> getLayerRecordsArrayList() {
+        return arrayList_LayerRecords;
     }
 
     public void read(RandomAccessFile rafile, FileHeader fheader) {
@@ -34,13 +41,16 @@ public class LayerInfo {
             //layerCount = rafile.readShort() & 0xFF;
 
             //4.2.3 Layer Records ?
+            arrayList_LayerRecords = new ArrayList<LayerRecords>();
             for (int i = 0; i < layerCount; i++) {
                 System.out.println("Layer: " + i);
 
                 LayerRecords lrecords = new LayerRecords();
                 lrecords.read(rafile, fheader);
+
+                arrayList_LayerRecords.add(i, lrecords);
+
                 System.out.println(lrecords.toString());
-                System.out.println();
                 /*ChannelImageData cidata = new ChannelImageData();
                 cidata.read(
                     rafile,
