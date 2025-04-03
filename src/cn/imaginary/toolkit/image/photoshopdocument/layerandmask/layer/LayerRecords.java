@@ -5,8 +5,6 @@ import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelIm
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelInfo;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.mask.LayerBlendingRangesData;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.mask.LayerMaskOrAdjustmentLayerData;
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
