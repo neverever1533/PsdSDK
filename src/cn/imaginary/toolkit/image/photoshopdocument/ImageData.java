@@ -51,16 +51,16 @@ public class ImageData {
 
             switch (compression_Method) {
                 case 0:
-                    imageDataRaw(rafile, fheader);
+                    imageDataRaw(rafile, fheader, linfo);
                     break;
                 case 1:
-                    imageDataRLE(rafile, fheader);
+                    imageDataRLE(rafile, fheader, linfo);
                     break;
                 case 2:
-                    imageDataZip(rafile, fheader);
+                    imageDataZip(rafile, fheader, linfo);
                     break;
                 case 3:
-                    imageDataZipPrediction(rafile, fheader);
+                    imageDataZipPrediction(rafile, fheader, linfo);
                     break;
                 default:
                     throw new IOException("Unknown Compression Method");
@@ -70,11 +70,11 @@ public class ImageData {
         } catch (IOException e) {}
     }
 
-    private void imageDataRaw(RandomAccessFile rafile, FileHeader fheader) {
+    private void imageDataRaw(RandomAccessFile rafile, FileHeader fheader, LayerInfo linfo) {
         //0 = Raw image data
     }
 
-    private void imageDataRLE(RandomAccessFile rafile, FileHeader fheader) {
+    private void imageDataRLE(RandomAccessFile rafile, FileHeader fheader, LayerInfo linfo) {
         //1 = RLE compressed the image data starts with the byte counts for all the scan lines (rows * channels), with each count stored as a two-byte value. The RLE compressed data follows, with each scan line compressed separately. The RLE compression is the same compression algorithm used by the Macintosh ROM routine PackBits , and the TIFF standard.
         int height = fheader.getHeight();
         int channels = fheader.getChannels();
@@ -87,11 +87,11 @@ public class ImageData {
         } catch (IOException e) {}
     }
 
-    private void imageDataZip(RandomAccessFile rafile, FileHeader fheader) {
+    private void imageDataZip(RandomAccessFile rafile, FileHeader fheader, LayerInfo linfo) {
         //2 = ZIP without prediction
     }
 
-    private void imageDataZipPrediction(RandomAccessFile rafile, FileHeader fheader) {
+    private void imageDataZipPrediction(RandomAccessFile rafile, FileHeader fheader, LayerInfo linfo) {
         //3 = ZIP with prediction.
     }
 
