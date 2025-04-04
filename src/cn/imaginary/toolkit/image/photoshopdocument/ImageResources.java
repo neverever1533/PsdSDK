@@ -3,16 +3,23 @@ package cn.imaginary.toolkit.image.photoshopdocument;
 import cn.imaginary.toolkit.image.photoshopdocument.imageresources.ImageResourceBlocks;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
 
 public class ImageResources {
 
     //3 Image Resources
     public ImageResources() {}
 
+    private ArrayList arrayList_ImageResourceBlocks;
+
     private int length_ImageResources;
 
     public int getLength() {
         return 4 + length_ImageResources;
+    }
+
+    public ArrayList getArrayListImageResourceBlocks() {
+        return arrayList_ImageResourceBlocks;
     }
 
     public void read(RandomAccessFile rafile) {
@@ -31,6 +38,7 @@ public class ImageResources {
                 long point = 0;
                 byte[] arr = new byte[4];
                 String signature;
+                arrayList_ImageResourceBlocks = new ArrayList<ImageResourceBlocks>();
                 while (point < length_ImageResources) {
                     // irblocks.read(rafile);
                     // len = irblocks.getLength();
@@ -39,10 +47,9 @@ public class ImageResources {
                     rafile.seek(rafile.getFilePointer() - 4);
                     if (signature.equalsIgnoreCase(ImageResourceBlocks.Signature_ImageResourceBlocks)) {
                         irblocks.read(rafile);
-                        // irblocks.read(rafile, length_ImageResources);
+                        arrayList_ImageResourceBlocks.add(irblocks);
                         len = irblocks.getLength();
                         System.out.println(irblocks.toString());
-                        System.out.println();
                     } else {
                         len = (int) (length_ImageResources - point);
                         System.out.println("unknown data size: " + len);
