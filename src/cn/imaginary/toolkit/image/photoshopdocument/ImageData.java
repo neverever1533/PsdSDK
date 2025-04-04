@@ -1,5 +1,9 @@
 package cn.imaginary.toolkit.image.photoshopdocument;
 
+import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.LayerInfo;
+// import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelImageData;
+// import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelInfo;
+// import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.LayerRecords;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
@@ -7,57 +11,56 @@ public class ImageData {
 
     public ImageData() {}
 
-    private int compressionMethod;
+    private int compression_Method;
 
-    public String[] arr_CompressionMethod = { "Raw", "RLE", "ZIP", "ZIP_Prediction" };
+    public static String[] arr_Compression_Method = { "Raw", "RLE", "ZIP", "ZIP_Prediction" };
 
-    private int length_ImageData;
+    private long length_ImageData;
 
     private byte[] arr_ImageData;
 
     public int getCompressionMethod() {
-        return compressionMethod;
+        return compression_Method;
     }
 
     public String getCompressionMethodName() {
-        return arr_CompressionMethod[compressionMethod];
+        return arr_Compression_Method[compression_Method];
     }
 
-    public int getLength() {
+    public long getLength() {
         return length_ImageData;
     }
 
-    public void read(RandomAccessFile rafile, FileHeader fheader) {
+    public void read(RandomAccessFile rafile, FileHeader fheader, LayerInfo linfo) {
         if (null == fheader) {
             return;
         }
-        //length_ImageData = (int)(rafile.length() - rafile.getFilePointer());
         try {
+            length_ImageData = rafile.length() - rafile.getFilePointer();
             //5.1 Compression Method2
             // Compression method:
             // 0 = Raw image data
-            // 1 = RLE compressed the image data starts with the byte counts for all the scan lines (rows * channels), with each count stored as a two-byte value.
-            // The RLE compressed data follows, with each scan line compressed separately. The RLE compression is the same compression algorithm used by the Macintosh ROM routine PackBits , and the TIFF standard.
+            // 1 = RLE compressed the image data starts with the byte counts for all the scan lines (rows * channels), with each count stored as a two-byte value. The RLE compressed data follows, with each scan line compressed separately. The RLE compression is the same compression algorithm used by the Macintosh ROM routine PackBits , and the TIFF standard.
             // 2 = ZIP without prediction
             // 3 = ZIP with prediction.
-            compressionMethod = rafile.readShort();
-            System.out.println("Compression Method: " + compressionMethod);
+
+            compression_Method = rafile.readShort();
 
             //5.2 Image Data：?
             // The image data. Planar order = RRR GGG BBB, etc.
-            int pixels = fheader.getHeight() * fheader.getWidth();
-            switch (compressionMethod) {
+
+            switch (compression_Method) {
                 case 0:
-                    imageDataRaw(rafile, fheader, pixels);
+                    imageDataRaw(rafile, fheader);
                     break;
                 case 1:
-                    imageDataRLE(rafile, fheader, pixels);
+                    imageDataRLE(rafile, fheader);
                     break;
                 case 2:
-                    imageDataZip(rafile, fheader, pixels);
+                    imageDataZip(rafile, fheader);
                     break;
                 case 3:
-                    imageDataZipPrediction(rafile, fheader, pixels);
+                    imageDataZipPrediction(rafile, fheader);
                     break;
                 default:
                     throw new IOException("Unknown Compression Method");
@@ -67,19 +70,39 @@ public class ImageData {
         } catch (IOException e) {}
     }
 
-    private void imageDataRaw(RandomAccessFile rafile, FileHeader fheader, int pixels) {
+    private void imageDataRaw(RandomAccessFile rafile, FileHeader fheader) {
         //0 = Raw image data
     }
 
-    private void imageDataRLE(RandomAccessFile rafile, FileHeader fheader, int pixels) {
-        //1 = RLE compressed the image data
+    private void imageDataRLE(RandomAccessFile rafile, FileHeader fheader) {
+        //1 = RLE compressed the image data starts with the byte counts for all the scan lines (rows * channels), with each count stored as a two-byte value. The RLE compressed data follows, with each scan line compressed separately. The RLE compression is the same compression algorithm used by the Macintosh ROM routine PackBits , and the TIFF standard.
+        int height = fheader.getHeight();
+        int channels = fheader.getChannels();
+        int scanLines = height * channels;
+        short[] arr_Count_ScanLines = new short[scanLines];
+        try {
+            for (int i = 0; i < scanLines; i++) {
+                arr_Count_ScanLines[i] = rafile.readShort();
+            }
+        } catch (IOException e) {}
     }
 
-    private void imageDataZip(RandomAccessFile rafile, FileHeader fheader, int pixels) {
+    private void imageDataZip(RandomAccessFile rafile, FileHeader fheader) {
         //2 = ZIP without prediction
     }
 
-    private void imageDataZipPrediction(RandomAccessFile rafile, FileHeader fheader, int pixels) {
+    private void imageDataZipPrediction(RandomAccessFile rafile, FileHeader fheader) {
         //3 = ZIP with prediction.
+    }
+
+    private void RleCompress(byte[] src, byte[] dest) {}
+
+    private void RleDecompress(byte[] src, byte[] dest) {}
+
+    public String toString() {
+        StringBuilder sbuilder = new StringBuilder();
+        sbuilder.append("Compression Method: " + compression_Method);
+        sbuilder.append("/Image Data Length: " + length_ImageData);
+        return sbuilder.toString();
     }
 }
