@@ -5,6 +5,8 @@ import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelIm
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelInfo;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.mask.LayerBlendingRangesData;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.mask.LayerMaskOrAdjustmentLayerData;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
@@ -38,6 +40,10 @@ public class LayerRecords {
 
     private int filler;
     private int length_ExtraData;
+
+    private LayerMaskOrAdjustmentLayerData lmoaldata;
+
+    private LayerBlendingRangesData lbrdata;
 
     private String name_Layer;
 
@@ -117,6 +123,14 @@ public class LayerRecords {
 
     public int lengthExtraData() {
         return length_ExtraData;
+    }
+
+    public LayerMaskOrAdjustmentLayerData getLayerMaskOrAdjustmentLayerData() {
+        return lmoaldata;
+    }
+
+    public LayerBlendingRangesData getLayerBlendingRangesData() {
+        return lbrdata;
     }
 
     public String getLayerName() {
@@ -219,14 +233,14 @@ public class LayerRecords {
 
             //4.2.3.11 Extra Data ?(Layer mask / adjustment layer data)
             // Layer mask data: See See Layer mask / adjustment layer data for structure. Can be 40 bytes, 24 bytes, or 4 bytes if no layer mask
-            LayerMaskOrAdjustmentLayerData lmoaldata = new LayerMaskOrAdjustmentLayerData();
+            lmoaldata = new LayerMaskOrAdjustmentLayerData();
             lmoaldata.read(rafile);
             int length_lmoaldata = lmoaldata.getLength();
             System.out.println(lmoaldata.toString());
 
             //4.2.3.12 Layer Blending Ranges:?
             // Layer blending ranges: See See Layer blending ranges data.
-            LayerBlendingRangesData lbrdata = new LayerBlendingRangesData();
+            lbrdata = new LayerBlendingRangesData();
             lbrdata.read(rafile);
             int length_lbrdata = lbrdata.getLength();
             System.out.println(lbrdata.toString());
