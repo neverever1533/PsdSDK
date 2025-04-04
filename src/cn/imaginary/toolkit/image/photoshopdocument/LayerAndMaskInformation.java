@@ -15,10 +15,22 @@ public class LayerAndMaskInformation {
 
     private LayerInfo linfo;
 
+    private GlobalLayerMaskInfo glminfo;
+
+    private AdditionalLayerInformation alinfo;
+
     private long length_LayerAndMaskInformation;
 
     public long getLength() {
         return 4 + length_LayerAndMaskInformation;
+    }
+
+    public LayerInfo getGlobalLayerMaskInfo() {
+        return glminfo;
+    }
+
+    public LayerInfo getAdditionalLayerInformation() {
+        return alinfo;
     }
 
     public LayerInfo getLayerInfo() {
@@ -46,7 +58,7 @@ public class LayerAndMaskInformation {
 
             //4.3 Global Layer Mask Info:?
             // Global layer mask info (see See Global layer mask info for details).
-            GlobalLayerMaskInfo glminfo = new GlobalLayerMaskInfo();
+            glminfo = new GlobalLayerMaskInfo();
             glminfo.read(rafile);
             System.out.println(glminfo.toString());
             System.out.println();
@@ -54,7 +66,7 @@ public class LayerAndMaskInformation {
             //4.4 Additional Layer Information:?
             // (Photoshop 4.0 and later)
             // Series of tagged blocks containing various types of data. See See Additional Layer Information for the list of the types of data that can be included here.
-            AdditionalLayerInformation alinfo = new AdditionalLayerInformation();
+            alinfo = new AdditionalLayerInformation();
             alinfo.read(rafile, fheader);
             System.out.println(alinfo.toString());
             System.out.println();
