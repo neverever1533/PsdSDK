@@ -25,11 +25,11 @@ public class LayerAndMaskInformation {
         return 4 + length_LayerAndMaskInformation;
     }
 
-    public LayerInfo getGlobalLayerMaskInfo() {
+    public GlobalLayerMaskInfo getGlobalLayerMaskInfo() {
         return glminfo;
     }
 
-    public LayerInfo getAdditionalLayerInformation() {
+    public AdditionalLayerInformation getAdditionalLayerInformation() {
         return alinfo;
     }
 
