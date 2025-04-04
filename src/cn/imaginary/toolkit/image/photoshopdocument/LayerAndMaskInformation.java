@@ -6,16 +6,23 @@ import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.GlobalLayerMask
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.LayerInfo;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
 
 public class LayerAndMaskInformation {
 
     //4 Layer and Mask Information
     public LayerAndMaskInformation() {}
 
+    private LayerInfo linfo;
+
     private long length_LayerAndMaskInformation;
 
     public long getLength() {
         return 4 + length_LayerAndMaskInformation;
+    }
+
+    public LayerInfo getLayerInfo() {
+        return linfo;
     }
 
     public void read(RandomAccessFile rafile, FileHeader fheader) {
@@ -24,15 +31,15 @@ public class LayerAndMaskInformation {
 
             //4.1 Layer and Mask Information Length 4
             // Length of the layer and mask information section. (**PSB** length is 8 bytes.)
-            if (!fheader.isFilePsb()) {
-                length_LayerAndMaskInformation = rafile.readInt();
-            } else {
+            if (fheader.isFilePsb()) {
                 length_LayerAndMaskInformation = rafile.readLong();
+            } else {
+                length_LayerAndMaskInformation = rafile.readInt();
             }
 
             //4.2 Layer Info:?
             // Layer info (see See Layer info for details).
-            LayerInfo linfo = new LayerInfo();
+            linfo = new LayerInfo();
             linfo.read(rafile, fheader);
             System.out.println(linfo.toString());
             System.out.println();
