@@ -6,7 +6,6 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class ImageResources {
 
@@ -45,20 +44,26 @@ public class ImageResources {
             long location = rafile.getFilePointer();
 
             readDataLength(rafile);
-            readData(rafile);
+            long length = readData(rafile);
 
             length_ += length_Data;
+            long space = length_ - length;
+            System.out.println("image resources space: " + space);
+            if (space > 0) {
+                rafile.skipBytes((int) space);
+            }
             rafile.seek(location + getLength());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void readData(RandomAccessFile rafile) throws IOException {
-        readDataArray(rafile);
+    private long readData(RandomAccessFile rafile) throws IOException {
+        return readDataArray(rafile);
     }
 
-    private void readDataArray(RandomAccessFile rafile) throws IOException {
+    private long readDataArray(RandomAccessFile rafile) throws IOException {
+        long location = rafile.getFilePointer();
         //3.2 Image resources:Variable
         //Variable,Image resources (Image Resource Blocks ).
         byte[] arr;
@@ -79,15 +84,11 @@ public class ImageResources {
                 offset += len;
                 System.out.println(irblocks.toString());
             } else {
-                throw new IOException("The signature of the Image Resource Blocks is wrong.");
-                /* len = length_Data - offset;
-                System.out.println("unknown data size: " + len);
-                rafile.skipBytes(len); */
-//                 arr = new byte[(int) len];
-//                 rafile.read(arr);
-//                 codePreview(arr);
+                offset++;
+                //                throw new IOException("The signature of the Image Resource Blocks is wrong.");
             }
         }
+        return rafile.getFilePointer() - location;
     }
 
     public String toString() {
