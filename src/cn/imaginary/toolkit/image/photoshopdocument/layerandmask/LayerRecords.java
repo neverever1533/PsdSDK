@@ -353,7 +353,7 @@ public class LayerRecords {
                 // throw new IOException("The Signature of the Additional Layer Information is wrong.");
             }
         }
-        //readAdditionalInfoArray();
+
         return rafile.getFilePointer() - location;
     }
 
@@ -374,30 +374,6 @@ public class LayerRecords {
             }
         }
     }
-
-    /*private void readAdditionalInfoArray() throws IOException {
-        String key_add;
-        for (Iterator<AdditionalLayerInfo> itr = arrayList_AdditionalLayerInfo.iterator(); itr.hasNext(); ) {
-            AdditionalLayerInfo alinfo = itr.next();
-            key_add = alinfo.getKey();
-            if (null != key_add) {
-                byte[] array = alinfo.getData();
-                if (key_add.equalsIgnoreCase(SectionDvider.Key)) {
-                    SectionDvider sdvider = new SectionDvider();
-                    sdvider.read(array, key_add);
-                    setLayerType(sdvider.getLayerType());
-                    setSubLayerType(sdvider.getSubLayerType());
-                } else if (key_add.equalsIgnoreCase(UnicodeLayerName.Key)) {
-                    UnicodeLayerName ulname = new UnicodeLayerName();
-                    ulname.read(array, key_add);
-                    byte[] arr = ulname.getData();
-                    if (null != arr) {
-                        setNameBytes(arr, ulname.getCharset());
-                    }
-                }
-            }
-        }
-    }*/
 
     public void checkCharset(byte[] array) {
         System.out.println("测试编码：");
