@@ -87,15 +87,6 @@ public class LayerAndMaskInfo {
         return glminfo.getLength();
     }
 
-    public void checkCharset(byte[] array) {
-        System.out.println("测试编码：");
-        SortedMap<String, Charset> cs = Charset.availableCharsets();
-        Collection<Charset> vs = cs.values();
-        for (Charset v : vs) {
-            System.out.println(v.toString() + ": " + new String(array, v));
-        }
-    }
-
     private long readChanelImageData(RandomAccessFile rafile, FileHeader fheader) throws IOException {
         long location = rafile.getFilePointer();
         for (Iterator<LayerRecords> it = arrayList_LayerRecords.iterator(); it.hasNext();) {
