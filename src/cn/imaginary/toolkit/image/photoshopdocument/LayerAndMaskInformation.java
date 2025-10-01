@@ -4,6 +4,7 @@ import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.AdditionalLayer
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.GlobalLayerMaskInfo;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.LayerRecords;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelImageData;
+import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelInfo;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.charset.Charset;
@@ -79,14 +80,18 @@ public class LayerAndMaskInfo {
     private long readChanelImageData(RandomAccessFile rafile, FileHeader fheader) throws IOException {
         long location = rafile.getFilePointer();
         int count = 0;
-        for (Iterator<LayerRecords> it = arrayList_LayerRecords.iterator(); it.hasNext(); ) {
+        for (Iterator<LayerRecords> it = arrayList_LayerRecords.iterator(); it.hasNext();) {
             LayerRecords lrecords = it.next();
             System.out.println("Layer count: " + count++);
-            ArrayList<ChannelImageData> arrayList_ChannelImageData = lrecords.getChannelImageDataList();
-            for (Iterator<ChannelImageData> itr = arrayList_ChannelImageData.iterator(); itr.hasNext(); ) {
-                ChannelImageData cidata = itr.next();
+            ArrayList<ChannelInfo> arrayList_ChannelInfo = lrecords.getChannelInfoList();
+            for (Iterator<ChannelInfo> itr = arrayList_ChannelInfo.iterator(); itr.hasNext();) {
+                ChannelInfo cinfo = itr.next();
+                ChannelImageData cidata = new ChannelImageData();
+                cidata.setDataLength(cinfo.getDataLength());
                 cidata.read(rafile, fheader, lrecords);
-                System.out.println(cidata.toString());
+                cinfo.setData(cidata.getData());
+                System.out.print("channel id: " + cinfo.getID());
+                System.out.println("/" + cidata.toString());
             }
             System.out.println();
         }
@@ -133,25 +138,30 @@ public class LayerAndMaskInfo {
         readLayerInfoDataArray(rafile, fheader, length);
     }
 
-    private long readLayerInfo(RandomAccessFile rafile, FileHeader fheader) throws IOException {
-        long location = rafile.getFilePointer();
-        //4.2 Layer Info:?
-        // Layer info (see See Layer info for details).
-
+    private long readLayerInfoDataLength(RandomAccessFile rafile, FileHeader fheader, long length) throws IOException {
         //4.2.1 Layer Info Length
         // Length of the layers info section, rounded up to a multiple of 2. (**PSB** length is 8 bytes.)
-        long length_ = 0;
+        //        long length_ = 0;
         long length_Data;
         if (fheader.isFilePsb()) {
             length_Data = rafile.readLong();
-            length_ += 8;
+            length += 8;
         } else {
             length_Data = rafile.readInt();
-            length_ += 4;
+            length += 4;
         }
         if (length_Data % 2 != 0) {
             length_Data++;
         }
+        return length_Data;
+    }
+
+    private long readLayerInfo(RandomAccessFile rafile, FileHeader fheader) throws IOException {
+        long location = rafile.getFilePointer();
+        long length_ = 0;
+        //4.2 Layer Info:?
+        // Layer info (see See Layer info for details).
+        long length_Data = readLayerInfoDataLength(rafile, fheader, length_);
         readLayerInfoData(rafile, fheader, length_Data);
         length_ += length_Data;
         rafile.seek(location + length_);
