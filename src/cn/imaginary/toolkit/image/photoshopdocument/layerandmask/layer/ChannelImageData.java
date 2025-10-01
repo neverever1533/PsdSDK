@@ -44,9 +44,13 @@ public class ChannelImageData {
         return compression;
     }
 
+    public int setCompression(int compression) {
+        this.compression = compression;
+    }
+
     private void readCompression(RandomAccessFile rafile) throws IOException {
         // Compression. 0 = Raw Data, 1 = RLE compressed, 2 = ZIP without prediction, 3 = ZIP with prediction.
-        compression = rafile.readShort();
+        setCompression(rafile.readShort());
     }
 
     private long readDataLength() {
@@ -70,9 +74,12 @@ public class ChannelImageData {
 
     private void readData(RandomAccessFile rafile, FileHeader fheader, LayerRecords lrecords, long length)
         throws IOException {
-        if (length > 2) {
-            readCompression(rafile);
-            byte[] arr = new byte[(int) (length - 2)];
+        if (length > 0) {
+            if (length > 2) {
+                readCompression(rafile);
+                rafile.seek(rafile.getFilePointer() - 2);
+            }
+            byte[] arr = new byte[(int) length];
             rafile.read(arr);
             setData(arr);
             readDataArray(arr, fheader, lrecords);
