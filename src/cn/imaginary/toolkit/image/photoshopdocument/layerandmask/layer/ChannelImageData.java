@@ -2,25 +2,16 @@ package cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer;
 
 import cn.imaginary.toolkit.image.photoshopdocument.FileHeader;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.LayerRecords;
-import cn.imaginary.toolkit.image.rle.PackBitsUtils;
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
+
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
 public class ChannelImageData {
 
-    public static int ID_Channel_Red = 0;
-    public static int ID_Channel_Green = 1;
-    public static int ID_Channel_Blue = 2;
-    public static int ID_Channel_Alpha = -1;
-    public static int ID_Channel_Mask = -2;
-
-    private int id_Channel;
-    private int Raw_Data = 0;
-    private int RLE_Compressed = 1;
-    private int ZIP_Without_Prediction = 2;
-    private int ZIP_With_Prediction = 3;
+    public static int Raw_Data = 0;
+    public static int RLE_Compressed = 1;
+    public static int ZIP = 2;
+    public static int ZIP_With_Prediction = 3;
     private int compression;
 
     private long length_;
@@ -28,15 +19,9 @@ public class ChannelImageData {
 
     private byte[] arr_Data;
 
-    public ChannelImageData() {}
-
-    public int getID() {
-        return id_Channel;
+    public ChannelImageData() {
     }
 
-    public void setID(int id) {
-        id_Channel = id;
-    }
 
     public long getLength() {
         return length_;
@@ -67,14 +52,16 @@ public class ChannelImageData {
         compression = rafile.readShort();
     }
 
-    private void readDataLength(RandomAccessFile rafile) {}
+    private long readDataLength() {
+        return getDataLength();
+    }
 
     public void read(RandomAccessFile rafile, FileHeader fheader, LayerRecords lrecords) {
         try {
             long location = rafile.getFilePointer();
 
-            readDataLength(rafile);
-            readData(rafile, fheader, lrecords);
+            long length = readDataLength();
+            readData(rafile, fheader, lrecords, length);
 
             length_ += length_Data;
             //            System.out.println("Channel Image data space: " + (location + length_ - rafile.getFilePointer()));
@@ -84,13 +71,13 @@ public class ChannelImageData {
         }
     }
 
-    private void readData(RandomAccessFile rafile, FileHeader fheader, LayerRecords lrecords) throws IOException {
-        if (length_Data > 0) {
-            byte[] arr = new byte[(int) length_Data];
-            rafile.read(arr);
-            setData(arr);
+    private void readData(RandomAccessFile rafile, FileHeader fheader, LayerRecords lrecords, long length) throws IOException {
+        if (length > 0) {
+//            byte[] arr = new byte[(int) length];
+//            rafile.read(arr);
+//            setData(arr);
+            readDataArray(rafile, fheader, lrecords);
         }
-        // readDataArray(rafile, fheader, lrecords);
     }
 
     private void readDataArray(RandomAccessFile rafile, FileHeader fheader, LayerRecords lrecords) throws IOException {
@@ -100,6 +87,7 @@ public class ChannelImageData {
         // If the layer's size, and therefore the data, is odd, a pad byte will be inserted at the end of the row.
         // If the layer is an adjustment layer, the channel data is undefined (probably all white.)
         readCompression(rafile);
+        rafile.skipBytes((int) (length_Data - 2));
         switch (compression) {
             case 0:
                 imageDataRaw(rafile, fheader, lrecords);
@@ -118,19 +106,22 @@ public class ChannelImageData {
         }
     }
 
-    private void imageDataRaw(RandomAccessFile rafile, FileHeader fheader, LayerRecords lrecords) {}
+    private void imageDataRaw(RandomAccessFile rafile, FileHeader fheader, LayerRecords lrecords) {
+    }
 
-    private void imageDataRLE(RandomAccessFile rafile, FileHeader fheader, LayerRecords lrecords) {}
+    private void imageDataRLE(RandomAccessFile rafile, FileHeader fheader, LayerRecords lrecords) {
+    }
 
-    private void imageDataZip(RandomAccessFile rafile, FileHeader fheader, LayerRecords lrecords) {}
+    private void imageDataZip(RandomAccessFile rafile, FileHeader fheader, LayerRecords lrecords) {
+    }
 
-    private void imageDataZipPrediction(RandomAccessFile rafile, FileHeader fheader, LayerRecords lrecords) {}
+    private void imageDataZipPrediction(RandomAccessFile rafile, FileHeader fheader, LayerRecords lrecords) {
+    }
 
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
-        sbuilder.append("Channel Image data: ");
-        sbuilder.append("/Channel ID: " + id_Channel);
-        sbuilder.append("/Channel Data Length: " + length_Data);
+        sbuilder.append("Channel Image Data Length: " + getDataLength());
+        sbuilder.append("/image data compression: " + getCompression());
         return sbuilder.toString();
     }
 }
