@@ -4,8 +4,10 @@ import cn.imaginary.toolkit.image.photoshopdocument.FileHeader;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.additional.SectionDvider;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.additional.UnicodeLayerName;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelImageData;
+import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelInfo;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.mask.BlendingRangesData;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.mask.MaskOrAdjustmentData;
+
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.charset.Charset;
@@ -17,37 +19,37 @@ public class LayerRecords {
 
     public static String Signature_8BIM = "8BIM";
     public static String[] arr_key_BlendMode = {
-        "pass",
-        "norm",
-        "diss",
-        "dark",
-        "mul ",
-        "idiv",
-        "lbrn",
-        "dkCl",
-        "lite",
-        "scrn",
-        "div ",
-        "lddg",
-        "lgCl",
-        "over",
-        "sLit",
-        "hLit",
-        "vLit",
-        "lLit",
-        "pLit",
-        "hMix",
-        "diff",
-        "smud",
-        "fsub",
-        "fdiv",
-        "hue ",
-        "sat ",
-        "colr",
-        "lum ",
+            "pass",
+            "norm",
+            "diss",
+            "dark",
+            "mul ",
+            "idiv",
+            "lbrn",
+            "dkCl",
+            "lite",
+            "scrn",
+            "div ",
+            "lddg",
+            "lgCl",
+            "over",
+            "sLit",
+            "hLit",
+            "vLit",
+            "lLit",
+            "pLit",
+            "hMix",
+            "diff",
+            "smud",
+            "fsub",
+            "fdiv",
+            "hue ",
+            "sat ",
+            "colr",
+            "lum ",
     };
 
-    private ArrayList<ChannelImageData> arrayList_ChannelImageData;
+    private ArrayList<ChannelInfo> arrayList_ChannelInfo;
 
     private ArrayList<AdditionalLayerInfo> arrayList_AdditionalLayerInfo;
 
@@ -81,7 +83,12 @@ public class LayerRecords {
     private MaskOrAdjustmentData moadata;
     private Charset charset;
 
-    public LayerRecords() {}
+    public LayerRecords() {
+    }
+
+    public void setChannels(int channels) {
+        this.channels = channels;
+    }
 
     public long getLength() {
         return length_;
@@ -111,8 +118,8 @@ public class LayerRecords {
         return arrayList_AdditionalLayerInfo;
     }
 
-    public ArrayList<ChannelImageData> getChannelImageDataList() {
-        return arrayList_ChannelImageData;
+    public ArrayList<ChannelInfo> getChannelInfoList() {
+        return arrayList_ChannelInfo;
     }
 
     public String getSignature() {
@@ -274,7 +281,8 @@ public class LayerRecords {
         byte[] arr = new byte[length_Name];
         rafile.read(arr);
         setNameBytes(arr);
-        //        System.out.println("name_Layer: " + getName("gbk"));
+        System.out.print("layerrecords read name length: " + length_Name);
+        System.out.println("/name: " + getName("gbk"));
         //        System.out.println("name_Layer: " + getName(getCharset()));
         return 1 + length_Name;
     }
@@ -306,8 +314,10 @@ public class LayerRecords {
 
         int length_name = readName(rafile);
 
-        long length_alinfo = readAdditionalLayerInfo(rafile, fheader, length);
-        long space = length - length_moadata - length_brdata - length_name - length_alinfo;
+        long length_ = length - length_moadata - length_brdata - length_name;
+        long length_alinfo = readAdditionalLayerInfo(rafile, fheader, length_);
+
+        long space = length_ - length_alinfo;
         System.out.println("layer records alinfo read space: " + space);
         if (space > 0) {
             rafile.skipBytes((int) space);
@@ -330,8 +340,8 @@ public class LayerRecords {
             signature = new String(arr);
             rafile.seek(rafile.getFilePointer() - 4);
             if (
-                signature.equalsIgnoreCase(AdditionalLayerInfo.Signature_8BIM) ||
-                signature.equalsIgnoreCase(AdditionalLayerInfo.Signature_8B64)
+                    signature.equalsIgnoreCase(AdditionalLayerInfo.Signature_8BIM) ||
+                            signature.equalsIgnoreCase(AdditionalLayerInfo.Signature_8B64)
             ) {
                 AdditionalLayerInfo alinfo = new AdditionalLayerInfo();
                 alinfo.read(rafile, fheader);
@@ -353,7 +363,7 @@ public class LayerRecords {
                 // throw new IOException("The Signature of the Additional Layer Information is wrong.");
             }
         }
-
+        //readAdditionalInfoArray();
         return rafile.getFilePointer() - location;
     }
 
@@ -361,26 +371,17 @@ public class LayerRecords {
         if (key.equalsIgnoreCase(SectionDvider.Key)) {
             SectionDvider sdvider = new SectionDvider();
             sdvider.read(array, key);
-            //            setLayerType(sdvider.getLayerType());
-            //            setSubLayerType(sdvider.getSubLayerType());
+            setLayerType(sdvider.getLayerType());
+            setSubLayerType(sdvider.getSubLayerType());
             System.out.println(sdvider.toString());
         } else if (key.equalsIgnoreCase(UnicodeLayerName.Key)) {
             UnicodeLayerName ulname = new UnicodeLayerName();
             ulname.read(array, key);
             byte[] arr = ulname.getData();
             if (null != arr) {
-                //                setNameBytes(arr, ulname.getCharset());
+                setNameBytes(arr, ulname.getCharset());
                 System.out.println(ulname.toString());
             }
-        }
-    }
-
-    public void checkCharset(byte[] array) {
-        System.out.println("测试编码：");
-        SortedMap<String, Charset> cs = Charset.availableCharsets();
-        Collection<Charset> vs = cs.values();
-        for (Charset v : vs) {
-            System.out.println(v.toString() + ": " + new String(array, v));
         }
     }
 
@@ -466,42 +467,25 @@ public class LayerRecords {
     }
 
     private void readChannelInfo(RandomAccessFile rafile, FileHeader fheader) throws IOException {
-        //4.2.3.3 Channel Info ?
-        readChannels(rafile);
-        int id_Channel;
-        long length_Data_Channel;
-        arrayList_ChannelImageData = new ArrayList<ChannelImageData>();
+        int channels = readChannels(rafile);
+        long location = rafile.getFilePointer();
+        arrayList_ChannelInfo = new ArrayList<ChannelInfo>();
         for (int j = 0; j < channels; j++) {
-            // Channel information. Six bytes per channel, consisting of:
-            // 2 bytes for Channel ID: 0 = red, 1 = green, etc.;
-            // -1 = transparency mask; -2 = user supplied layer mask, -3 real user supplied layer mask (when both a user mask and a vector mask are present)
-            //4.2.3.3.1 Channel ID:2
-            id_Channel = rafile.readShort();
-            length_ += 2;
-            ChannelImageData cidata = new ChannelImageData();
-            cidata.setID(id_Channel);
-
-            //4.2.3.3.2 Channel Data Length:4
-            // 4 bytes for length of corresponding channel data. (**PSB** 8 bytes for length of corresponding channel data.) See See Channel image data for structure of channel data.
-            if (fheader.isFilePsb()) {
-                length_Data_Channel = rafile.readLong();
-                length_ += 8;
-            } else {
-                length_Data_Channel = rafile.readInt();
-                length_ += 4;
-            }
-            cidata.setDataLength(length_Data_Channel);
-
-            arrayList_ChannelImageData.add(j, cidata);
-            // System.out.println(cinfo.toString());
+            ChannelInfo cinfo = new ChannelInfo();
+            cinfo.read(rafile, fheader);
+            arrayList_ChannelInfo.add(j, cinfo);
+//            length_ += cinfo.getLength();
+            System.out.println(cinfo.toString());
         }
+        length_ += rafile.getFilePointer() - location;
     }
 
-    private void readChannels(RandomAccessFile rafile) throws IOException {
+    private int readChannels(RandomAccessFile rafile) throws IOException {
         //4.2.3.2 Channels:2
         // Number of channels in the layer
-        channels = rafile.readShort();
+        int channels = rafile.readShort();
         length_ += 2;
+        return channels;
     }
 
     private void readRectangle(RandomAccessFile rafile) throws IOException {
