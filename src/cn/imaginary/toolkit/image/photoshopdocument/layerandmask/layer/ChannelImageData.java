@@ -78,7 +78,7 @@ public class ChannelImageData {
             byte[] arr = new byte[(int) length];
             rafile.read(arr);
             setData(arr);
-            readDataArray(rafile, fheader, lrecords);
+//            readDataArray(arr fheader, lrecords);
         }
     }
 
