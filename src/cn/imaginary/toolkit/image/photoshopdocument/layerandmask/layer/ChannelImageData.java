@@ -70,31 +70,25 @@ public class ChannelImageData {
 
     private void readData(RandomAccessFile rafile, FileHeader fheader, LayerRecords lrecords, long length)
         throws IOException {
-        if (length > 0) {
-            //            byte[] arr = new byte[(int) length];
-            //            rafile.read(arr);
-            //            setData(arr);
-            readDataArray(rafile, fheader, lrecords, length);
+        if (length > 2) {
+            readCompression(rafile);
+            byte[] arr = new byte[(int) (length - 2)];
+            rafile.read(arr);
+            setData(arr);
+            readDataArray(arr, fheader, lrecords);
         }
     }
 
-    private void readDataArray(RandomAccessFile rafile, FileHeader fheader, LayerRecords lrecords, long length)
-        throws IOException {
+    private void readDataArray(byte[] array, FileHeader fheader, LayerRecords lrecords) throws IOException {
+        readImageData(array, fheader, lrecords);
+    }
+
+    private void readImageData(byte[] array, FileHeader fheader, LayerRecords lrecords) throws IOException {
         // Image data.:?
         // If the compression code is 0, the image data is just the raw image data, whose size is calculated as (LayerBottom-LayerTop)* (LayerRight-LayerLeft) (from the first field in See Layer records).
         // If the compression code is 1, the image data starts with the byte counts for all the scan lines in the channel (LayerBottom-LayerTop) , with each count stored as a two-byte value.(**PSB** each count stored as a four-byte value.) The RLE compressed data follows, with each scan line compressed separately. The RLE compression is the same compression algorithm used by the Macintosh ROM routine PackBits, and the TIFF standard.
         // If the layer's size, and therefore the data, is odd, a pad byte will be inserted at the end of the row.
         // If the layer is an adjustment layer, the channel data is undefined (probably all white.)
-        readCompression(rafile);
-        if (length > 2) {
-            // rafile.skipBytes((int) (length - 2));
-            byte[] arr = new byte[(int) (length - 2)];
-            rafile.read(arr);
-            readImageData(arr, fheader, lrecords);
-        }
-    }
-
-    private void readImageData(byte[] array, FileHeader fheader, LayerRecords lrecords) throws IOException {
         switch (compression) {
             case 0:
                 readImageDataRaw(array, fheader, lrecords);
@@ -113,9 +107,7 @@ public class ChannelImageData {
         }
     }
 
-    private void readImageDataRaw(byte[] array, FileHeader fheader, LayerRecords lrecords) {
-      
-    }
+    private void readImageDataRaw(byte[] array, FileHeader fheader, LayerRecords lrecords) {}
 
     private void readImageDataRLE(byte[] array, FileHeader fheader, LayerRecords lrecords) {}
 
