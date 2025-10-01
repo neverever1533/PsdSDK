@@ -54,7 +54,11 @@ public class LayerAndMaskInfo {
             readData(rafile, fheader);
 
             length_ += length_Data;
-            System.out.println("layer and mask space: " + (location + length_ - rafile.getFilePointer()));
+            long space = location + length_ - rafile.getFilePointer();
+            System.out.println("layer and mask space: " + space);
+            if (space > 0) {
+                rafile.skipBytes((int) space);
+            }
             rafile.seek(location + getLength());
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -70,33 +74,21 @@ public class LayerAndMaskInfo {
         long length_layer = readLayerInfo(rafile, fheader);
         space -= length_layer;
         System.out.println("layer and mask layerinfo read space: " + space);
-
-        long length_mask = readGlobalLayerMaskInfo(rafile, fheader);
-        space -= length_mask;
-        System.out.println("layer and mask maskinfo read space: " + space);
-        //        readAdditionalLayerInfo(rafile, fheader);
-    }
-
-    private long readGlobalLayerMaskInfo(RandomAccessFile rafile, FileHeader fheader) {
-        //4.3 Global Layer Mask Info:?
-        // Global layer mask info (see See Global layer mask info for details).
-        glminfo = new GlobalLayerMaskInfo();
-        glminfo.read(rafile);
-        System.out.println(glminfo.toString());
-        System.out.println();
-        return glminfo.getLength();
     }
 
     private long readChanelImageData(RandomAccessFile rafile, FileHeader fheader) throws IOException {
         long location = rafile.getFilePointer();
-        for (Iterator<LayerRecords> it = arrayList_LayerRecords.iterator(); it.hasNext();) {
+        int count = 0;
+        for (Iterator<LayerRecords> it = arrayList_LayerRecords.iterator(); it.hasNext(); ) {
             LayerRecords lrecords = it.next();
+            System.out.println("Layer count: " + count++);
             ArrayList<ChannelImageData> arrayList_ChannelImageData = lrecords.getChannelImageDataList();
-            for (Iterator<ChannelImageData> itr = arrayList_ChannelImageData.iterator(); itr.hasNext();) {
+            for (Iterator<ChannelImageData> itr = arrayList_ChannelImageData.iterator(); itr.hasNext(); ) {
                 ChannelImageData cidata = itr.next();
                 cidata.read(rafile, fheader, lrecords);
                 System.out.println(cidata.toString());
             }
+            System.out.println();
         }
         return rafile.getFilePointer() - location;
     }
