@@ -1,4 +1,4 @@
-package cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer;
+package cn.imaginary.toolkit.image.photoshopdocument.layerandmask.mask;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
