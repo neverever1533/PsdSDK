@@ -75,7 +75,7 @@ public class ChannelImageData {
     private void readData(RandomAccessFile rafile, FileHeader fheader, LayerRecords lrecords, long length)
         throws IOException {
         if (length > 0) {
-            if (length > 2) {
+            if (length >= 2) {
                 readCompression(rafile);
                 rafile.seek(rafile.getFilePointer() - 2);
             }
