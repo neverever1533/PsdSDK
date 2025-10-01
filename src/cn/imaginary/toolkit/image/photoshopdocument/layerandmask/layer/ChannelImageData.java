@@ -2,7 +2,6 @@ package cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer;
 
 import cn.imaginary.toolkit.image.photoshopdocument.FileHeader;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.LayerRecords;
-
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
@@ -19,9 +18,7 @@ public class ChannelImageData {
 
     private byte[] arr_Data;
 
-    public ChannelImageData() {
-    }
-
+    public ChannelImageData() {}
 
     public long getLength() {
         return length_;
@@ -71,53 +68,60 @@ public class ChannelImageData {
         }
     }
 
-    private void readData(RandomAccessFile rafile, FileHeader fheader, LayerRecords lrecords, long length) throws IOException {
+    private void readData(RandomAccessFile rafile, FileHeader fheader, LayerRecords lrecords, long length)
+        throws IOException {
         if (length > 0) {
-            readCompression(rafile);
-        rafile.seek(rafile.getFilePointer() - 2);
-            byte[] arr = new byte[(int) length];
-            rafile.read(arr);
-            setData(arr);
-            readDataArray(arr, fheader, lrecords);
+            //            byte[] arr = new byte[(int) length];
+            //            rafile.read(arr);
+            //            setData(arr);
+            readDataArray(rafile, fheader, lrecords, length);
         }
     }
 
-    private void readDataArray(byte[] array, FileHeader fheader, LayerRecords lrecords) throws IOException {
+    private void readDataArray(RandomAccessFile rafile, FileHeader fheader, LayerRecords lrecords, long length)
+        throws IOException {
         // Image data.:?
         // If the compression code is 0, the image data is just the raw image data, whose size is calculated as (LayerBottom-LayerTop)* (LayerRight-LayerLeft) (from the first field in See Layer records).
         // If the compression code is 1, the image data starts with the byte counts for all the scan lines in the channel (LayerBottom-LayerTop) , with each count stored as a two-byte value.(**PSB** each count stored as a four-byte value.) The RLE compressed data follows, with each scan line compressed separately. The RLE compression is the same compression algorithm used by the Macintosh ROM routine PackBits, and the TIFF standard.
         // If the layer's size, and therefore the data, is odd, a pad byte will be inserted at the end of the row.
         // If the layer is an adjustment layer, the channel data is undefined (probably all white.)
+        readCompression(rafile);
+        if (length > 2) {
+            // rafile.skipBytes((int) (length - 2));
+            byte[] arr = new byte[(int) (length - 2)];
+            rafile.read(arr);
+            readImageData(arr, fheader, lrecords);
+        }
+    }
 
+    private void readImageData(byte[] array, FileHeader fheader, LayerRecords lrecords) throws IOException {
         switch (compression) {
             case 0:
-                imageDataRaw(array, fheader, lrecords);
+                readImageDataRaw(array, fheader, lrecords);
                 break;
             case 1:
-                imageDataRLE(array, fheader, lrecords);
+                readImageDataRLE(array, fheader, lrecords);
                 break;
             case 2:
-                imageDataZip(array, fheader, lrecords);
+                readImageDataZip(array, fheader, lrecords);
                 break;
             case 3:
-                imageDataZipPrediction(array, fheader, lrecords);
+                readImageDataZipPrediction(array, fheader, lrecords);
                 break;
             default:
                 throw new IOException("The Compression Method of the Channel Image Data is wrong.");
         }
     }
 
-    private void imageDataRaw(byte[] array, FileHeader fheader, LayerRecords lrecords) {
+    private void readImageDataRaw(byte[] array, FileHeader fheader, LayerRecords lrecords) {
+      
     }
 
-    private void imageDataRLE(byte[] array, FileHeader fheader, LayerRecords lrecords) {
-    }
+    private void readImageDataRLE(byte[] array, FileHeader fheader, LayerRecords lrecords) {}
 
-    private void imageDataZip(byte[] array, FileHeader fheader, LayerRecords lrecords) {
-    }
+    private void readImageDataZip(byte[] array, FileHeader fheader, LayerRecords lrecords) {}
 
-    private void imageDataZipPrediction(byte[] array, FileHeader fheader, LayerRecords lrecords) {
-    }
+    private void readImageDataZipPrediction(byte[] array, FileHeader fheader, LayerRecords lrecords) {}
 
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
