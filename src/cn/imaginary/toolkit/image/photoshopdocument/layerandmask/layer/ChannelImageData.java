@@ -78,11 +78,11 @@ public class ChannelImageData {
             byte[] arr = new byte[(int) length];
             rafile.read(arr);
             setData(arr);
-//            readDataArray(arr fheader, lrecords);
+            readDataArray(arr, fheader, lrecords);
         }
     }
 
-    private void readDataArray(RandomAccessFile rafile, FileHeader fheader, LayerRecords lrecords) throws IOException {
+    private void readDataArray(byte[] array, FileHeader fheader, LayerRecords lrecords) throws IOException {
         // Image data.:?
         // If the compression code is 0, the image data is just the raw image data, whose size is calculated as (LayerBottom-LayerTop)* (LayerRight-LayerLeft) (from the first field in See Layer records).
         // If the compression code is 1, the image data starts with the byte counts for all the scan lines in the channel (LayerBottom-LayerTop) , with each count stored as a two-byte value.(**PSB** each count stored as a four-byte value.) The RLE compressed data follows, with each scan line compressed separately. The RLE compression is the same compression algorithm used by the Macintosh ROM routine PackBits, and the TIFF standard.
@@ -91,32 +91,32 @@ public class ChannelImageData {
 
         switch (compression) {
             case 0:
-                imageDataRaw(rafile, fheader, lrecords);
+                imageDataRaw(array, fheader, lrecords);
                 break;
             case 1:
-                imageDataRLE(rafile, fheader, lrecords);
+                imageDataRLE(array, fheader, lrecords);
                 break;
             case 2:
-                imageDataZip(rafile, fheader, lrecords);
+                imageDataZip(array, fheader, lrecords);
                 break;
             case 3:
-                imageDataZipPrediction(rafile, fheader, lrecords);
+                imageDataZipPrediction(array, fheader, lrecords);
                 break;
             default:
                 throw new IOException("The Compression Method of the Channel Image Data is wrong.");
         }
     }
 
-    private void imageDataRaw(RandomAccessFile rafile, FileHeader fheader, LayerRecords lrecords) {
+    private void imageDataRaw(byte[] array, FileHeader fheader, LayerRecords lrecords) {
     }
 
-    private void imageDataRLE(RandomAccessFile rafile, FileHeader fheader, LayerRecords lrecords) {
+    private void imageDataRLE(byte[] array, FileHeader fheader, LayerRecords lrecords) {
     }
 
-    private void imageDataZip(RandomAccessFile rafile, FileHeader fheader, LayerRecords lrecords) {
+    private void imageDataZip(byte[] array, FileHeader fheader, LayerRecords lrecords) {
     }
 
-    private void imageDataZipPrediction(RandomAccessFile rafile, FileHeader fheader, LayerRecords lrecords) {
+    private void imageDataZipPrediction(byte[] array, FileHeader fheader, LayerRecords lrecords) {
     }
 
     public String toString() {
