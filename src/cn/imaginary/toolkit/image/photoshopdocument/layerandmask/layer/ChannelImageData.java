@@ -73,6 +73,8 @@ public class ChannelImageData {
 
     private void readData(RandomAccessFile rafile, FileHeader fheader, LayerRecords lrecords, long length) throws IOException {
         if (length > 0) {
+            readCompression(rafile);
+        rafile.seek(rafile.getFilePointer() - 2);
             byte[] arr = new byte[(int) length];
             rafile.read(arr);
             setData(arr);
@@ -86,8 +88,7 @@ public class ChannelImageData {
         // If the compression code is 1, the image data starts with the byte counts for all the scan lines in the channel (LayerBottom-LayerTop) , with each count stored as a two-byte value.(**PSB** each count stored as a four-byte value.) The RLE compressed data follows, with each scan line compressed separately. The RLE compression is the same compression algorithm used by the Macintosh ROM routine PackBits, and the TIFF standard.
         // If the layer's size, and therefore the data, is odd, a pad byte will be inserted at the end of the row.
         // If the layer is an adjustment layer, the channel data is undefined (probably all white.)
-        readCompression(rafile);
-        rafile.seek(rafile.getFilePointer() - 2);
+
         switch (compression) {
             case 0:
                 imageDataRaw(rafile, fheader, lrecords);
