@@ -73,9 +73,9 @@ public class ChannelImageData {
 
     private void readData(RandomAccessFile rafile, FileHeader fheader, LayerRecords lrecords, long length) throws IOException {
         if (length > 0) {
-//            byte[] arr = new byte[(int) length];
-//            rafile.read(arr);
-//            setData(arr);
+            byte[] arr = new byte[(int) length];
+            rafile.read(arr);
+            setData(arr);
             readDataArray(rafile, fheader, lrecords);
         }
     }
@@ -87,7 +87,7 @@ public class ChannelImageData {
         // If the layer's size, and therefore the data, is odd, a pad byte will be inserted at the end of the row.
         // If the layer is an adjustment layer, the channel data is undefined (probably all white.)
         readCompression(rafile);
-        rafile.skipBytes((int) (length_Data - 2));
+        rafile.seek(rafile.getFilePointer() - 2);
         switch (compression) {
             case 0:
                 imageDataRaw(rafile, fheader, lrecords);
