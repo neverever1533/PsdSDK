@@ -110,6 +110,14 @@ public class LayerRecords {
         return right;
     }
 
+    public int getHeight() {
+        return bottom - top;
+    }
+
+    public int getWidth() {
+        return right - left;
+    }
+
     public int getChannels() {
         return channels;
     }
@@ -318,7 +326,7 @@ public class LayerRecords {
         long length_alinfo = readAdditionalLayerInfo(rafile, fheader, length_);
 
         long space = length_ - length_alinfo;
-        System.out.println("layer records alinfo read space: " + space);
+//        System.out.println("layer records alinfo read space: " + space);
         if (space > 0) {
             rafile.skipBytes((int) space);
         }
@@ -349,9 +357,6 @@ public class LayerRecords {
                 if (null != key) {
                     arrayList_AdditionalLayerInfo.add(alinfo);
                     readAdditionLayerInfo(alinfo.getData(), key);
-                    //                    System.out.println("leyertype name: " + alinfo.getLayerTypeName());
-                    //                    System.out.println("sub layertype name: " + alinfo.getSubLayerTypeName());
-                    //                    setNameBytes(alinfo.getNameBytes(), alinfo.getCharset());
                     System.out.println(alinfo.toString());
                     offset += alinfo.getLength();
                 } else {
