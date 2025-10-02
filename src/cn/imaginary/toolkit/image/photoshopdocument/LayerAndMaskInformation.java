@@ -88,7 +88,7 @@ public class LayerAndMaskInfo {
                 ChannelInfo cinfo = itr.next();
                 ChannelImageData cidata = new ChannelImageData();
                 cidata.setDataLength(cinfo.getDataLength());
-                cidata.read(rafile, fheader, lrecords);
+                cidata.read(rafile, fheader, lrecords.getWidth(), lrecords.getHeight());
                 cinfo.setData(cidata.getData());
                 System.out.print("channel id: " + cinfo.getID());
                 System.out.println("/" + cidata.toString());
