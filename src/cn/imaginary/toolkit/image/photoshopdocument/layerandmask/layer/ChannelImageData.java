@@ -87,10 +87,6 @@ public class ChannelImageData {
 
     private void readData(RandomAccessFile rafile, FileHeader fheader, int width, int height) throws IOException {
         if (length_Data > 0) {
-            /*if (length_Data >= 2) {
-                readCompression(rafile);
-                rafile.seek(rafile.getFilePointer() - 2);
-            }*/
             byte[] arr = new byte[(int) length_Data];
             rafile.read(arr);
             setData(arr);
@@ -159,28 +155,6 @@ public class ChannelImageData {
             }
             arr_ScanLine[i] = (byte) count;
         }
-        /*System.out.println("arr_ScanLine: ");
-        System.out.println(arr_ScanLine[0]);
-        System.out.println(arr_ScanLine[1]);
-        System.out.println(arr_ScanLine[2]);
-        System.out.println(arr_ScanLine[3]);*/
-
-        /*int length = length_Data - offset;
-        byte[] arr_Image = new byte[length];
-        dinstream.read(arr_Image);
-        int length_Image = width * height;
-        byte[] arr_Data_Image = new byte[length_Image];
-        byte[] arr;
-        int length;
-        for (int i = 0; i < height; i++) {
-            count = arr_ScanLine[i];
-            if (count < 0) {
-                count = 1 - count;
-                length = arr_ScanLine[i++];
-                arr = new byte[length];
-                dinstream.read(arr);
-            }
-        }*/
     }
 
     private void readImageDataZip(DataInputStream dinstream, FileHeader fheader, int width, int height)
