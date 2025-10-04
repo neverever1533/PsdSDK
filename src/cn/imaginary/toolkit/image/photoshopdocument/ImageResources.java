@@ -11,7 +11,8 @@ public class ImageResources {
 
     private ArrayList<ImageResourceBlocks> arrayList_ImageResourceBlocks;
     private int length_Data;
-    private long length_;
+    private int length_;
+    private byte[] arr_Data;
 
     //3 Image Resources
     public ImageResources() {}
@@ -24,71 +25,82 @@ public class ImageResources {
         length_Data = length;
     }
 
-    public long getLength() {
+    public byte[] getData() {
+        return arr_Data;
+    }
+
+    public void setData(byte[] array) {
+        arr_Data = array;
+    }
+
+    public int getLength() {
         return length_;
+    }
+
+    public void setLength(int length) {
+        length_ = length;
     }
 
     public ArrayList<ImageResourceBlocks> getArrayListImageResourceBlocks() {
         return arrayList_ImageResourceBlocks;
     }
 
-    private void readDataLength(RandomAccessFile rafile) throws IOException {
-        //3.1 Image Resources length:4
-        //4,Length of image resource section. The length may be zero.
-        length_Data = rafile.readInt();
-        length_ += 4;
-    }
-
     public void read(RandomAccessFile rafile) {
         try {
-            long location = rafile.getFilePointer();
-
             readDataLength(rafile);
-            long length = readData(rafile);
-
-            length_ += length_Data;
-            long space = length_ - length;
-            System.out.println("image resources space: " + space);
-            if (space > 0) {
-                rafile.skipBytes((int) space);
-            }
-            rafile.seek(location + getLength());
+            readData(rafile, getDataLength());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private long readData(RandomAccessFile rafile) throws IOException {
-        return readDataArray(rafile);
+    private void readDataLength(RandomAccessFile rafile) throws IOException {
+        //3.1 Image Resources length:4
+        //4,Length of image resource section. The length may be zero.
+        setDataLength(rafile.readInt());
+        setLength(4 + getDataLength());
     }
 
-    private long readDataArray(RandomAccessFile rafile) throws IOException {
-        long location = rafile.getFilePointer();
-        //3.2 Image resources:Variable
-        //Variable,Image resources (Image Resource Blocks ).
-        byte[] arr;
-        String signature;
-        long len;
-        long offset = 0;
-        arrayList_ImageResourceBlocks = new ArrayList<ImageResourceBlocks>();
-        while (offset < length_Data) {
-            arr = new byte[4];
+    private void readData(RandomAccessFile rafile, int length) throws IOException {
+        if (length > 0) {
+            byte[] arr = new byte[length];
             rafile.read(arr);
-            signature = new String(arr);
-            rafile.seek(rafile.getFilePointer() - 4);
-            if (signature.equalsIgnoreCase(ImageResourceBlocks.Signature_8BIM)) {
-                ImageResourceBlocks irblocks = new ImageResourceBlocks();
-                irblocks.read(rafile);
-                arrayList_ImageResourceBlocks.add(irblocks);
-                len = irblocks.getLength();
-                offset += len;
-                System.out.println(irblocks.toString());
-            } else {
-                offset++;
-                //                throw new IOException("The signature of the Image Resource Blocks is wrong.");
-            }
+            setData(arr);
+            readDataArray(arr);
         }
-        return rafile.getFilePointer() - location;
+    }
+
+    private void readDataArray(byte[] array) {
+        try {
+            DataInputStream dinstream = new DataInputStream(new ByteArrayInputStream(array));
+            //3.2 Image resources:Variable
+            //Variable,Image resources (Image Resource Blocks ).
+            byte[] arr;
+            String signature;
+            long len;
+            int offset = 0;
+            arrayList_ImageResourceBlocks = new ArrayList<ImageResourceBlocks>();
+            while (offset < array.length) {
+                dinstream.mark(offset);
+                arr = new byte[4];
+                dinstream.read(arr);
+                signature = new String(arr);
+                dinstream.reset();
+                if (signature.equalsIgnoreCase(ImageResourceBlocks.Signature_8BIM)) {
+                    ImageResourceBlocks irblocks = new ImageResourceBlocks();
+                    irblocks.read(dinstream);
+                    arrayList_ImageResourceBlocks.add(irblocks);
+                    offset += irblocks.getLength();
+                    System.out.println(irblocks.toString());
+                } else {
+                    offset++;
+                    //                throw new IOException("The signature of the Image Resource Blocks is wrong.");
+                }
+            }
+            dinstream.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public String toString() {
