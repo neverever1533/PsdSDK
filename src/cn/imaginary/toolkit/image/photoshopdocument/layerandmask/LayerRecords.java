@@ -3,17 +3,14 @@ package cn.imaginary.toolkit.image.photoshopdocument.layerandmask;
 import cn.imaginary.toolkit.image.photoshopdocument.FileHeader;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.additional.SectionDvider;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.additional.UnicodeLayerName;
-import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelImageData;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelInfo;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.mask.BlendingRangesData;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.mask.MaskOrAdjustmentData;
-
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.SortedMap;
 
 public class LayerRecords {
 
@@ -58,6 +55,7 @@ public class LayerRecords {
     private String signature;
     private String key_BlendMode;
 
+    private int length_Data_Extra;
     private int top;
     private int left;
     private int bottom;
@@ -80,34 +78,70 @@ public class LayerRecords {
     private byte[] arr_Name;
 
     private BlendingRangesData brdata;
+
     private MaskOrAdjustmentData moadata;
+
     private Charset charset;
 
-    public LayerRecords() {
-    }
+    private byte[] arr_Data_Extra;
 
-    public void setChannels(int channels) {
-        this.channels = channels;
+    public LayerRecords() {
     }
 
     public long getLength() {
         return length_;
     }
 
+    public void setLength(long length) {
+        length_ = length;
+    }
+
+    public int getExtraDataLength() {
+        return length_Data_Extra;
+    }
+
+    public void setExtraDataLength(int length) {
+        length_Data_Extra = length;
+    }
+
+    public byte[] getExtraData() {
+        return arr_Data_Extra;
+    }
+
+    public void setExtraData(byte[] array) {
+        arr_Data_Extra = array;
+    }
+
     public int getTop() {
         return top;
+    }
+
+    public void setTop(int top) {
+        this.top = top;
     }
 
     public int getLeft() {
         return left;
     }
 
+    public void setLeft(int left) {
+        this.left = left;
+    }
+
     public int getBottom() {
         return bottom;
     }
 
+    public void setBottom(int bottom) {
+        this.bottom = bottom;
+    }
+
     public int getRight() {
         return right;
+    }
+
+    public void setRight(int right) {
+        this.right = right;
     }
 
     public int getHeight() {
@@ -122,6 +156,10 @@ public class LayerRecords {
         return channels;
     }
 
+    public void setChannels(int channels) {
+        this.channels = channels;
+    }
+
     public ArrayList<AdditionalLayerInfo> getAdditionalLayerInfoList() {
         return arrayList_AdditionalLayerInfo;
     }
@@ -134,48 +172,107 @@ public class LayerRecords {
         return signature;
     }
 
+    public void setSignature(String signature) throws IOException {
+        if (null == signature || !signature.equalsIgnoreCase(Signature_8BIM)) {
+            throw new IOException("BlendMode signature is wrong.");
+        } else {
+            this.signature = signature;
+        }
+    }
+
     public String getBlendModeKey() {
         return key_BlendMode;
     }
 
-    public int getBlendMode() {
-        return blendMode;
+    public boolean isSupportedBlendModeKey(String key) {
+        if (null != key) {
+            for (int i = 0; i < arr_key_BlendMode.length; i++) {
+                if (key.equalsIgnoreCase(arr_key_BlendMode[i])) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public void setBlendModeKey(String key) throws IOException {
+        if (isSupportedBlendModeKey(key)) {
+            key_BlendMode = key;
+        } else {
+            throw new IOException("The key of the BlendMode in the LayerRecords is wrong.");
+        }
     }
 
     public int getOpacity() {
         return opacity;
     }
 
+    public void setOpacity(int opacity) {
+        this.opacity = opacity;
+    }
+
     public int getClipping() {
         return clipping;
+    }
+
+    public void setClipping(int clipping) {
+        this.clipping = clipping;
     }
 
     public int getFlags() {
         return flags;
     }
 
+    public void setFlags(int flags) {
+        this.flags = flags;
+    }
+
     public boolean isTransparencyProtected() {
         return is_Transparency_Protected;
+    }
+
+    public void setTransparencyProtected(boolean isTransparencyProtected) {
+        is_Transparency_Protected = isTransparencyProtected;
     }
 
     public boolean isVisible() {
         return is_Visible;
     }
 
+    public void setVisible(boolean isVisible) {
+        is_Visible = isVisible;
+    }
+
     public boolean isObsolete() {
         return is_Obsolete;
+    }
+
+    public void isObsolete(boolean isObsolete) {
+        is_Obsolete = isObsolete;
     }
 
     public boolean isPixelDataUseful() {
         return is_Pixel_Data_Useful;
     }
 
+    public void setPixelDataUseful(boolean isPixelDataUseful) {
+        is_Pixel_Data_Useful = isPixelDataUseful;
+    }
+
     public boolean isPixelDataIrrelevant() {
         return is_Pixel_Data_Irrelevant;
     }
 
+    public void setPixelDataIrrelevant(boolean isPixelDataIrrelevant) {
+        is_Pixel_Data_Irrelevant = isPixelDataIrrelevant;
+    }
+
     public int getFiller() {
         return filler;
+    }
+
+    public void setFiller(int filler) {
+        this.filler = 0;
     }
 
     public MaskOrAdjustmentData getMaskOrAdjustmentLayerData() {
@@ -250,109 +347,173 @@ public class LayerRecords {
         return SectionDvider.getSubLayerTypeName(layerType_Sub);
     }
 
-    public void read(RandomAccessFile rafile, FileHeader fheader) {
+    public void read(DataInputStream dinstream, FileHeader fheader) {
         try {
-            long location = rafile.getFilePointer();
-
-            readRectangle(rafile);
-            readChannelInfo(rafile, fheader);
-            readBlendModeSignature(rafile);
-            readBlendModeKey(rafile);
-            readOpacity(rafile);
-            readClipping(rafile);
-            readFlags(rafile);
-            readFiller(rafile);
-
-            int length_Data_Extra = readExtraDataLength(rafile);
-            readExtraData(rafile, fheader, length_Data_Extra);
-
-            length_ += length_Data_Extra;
-            //            System.out.println("layer records space: " + (location + length_ - rafile.getFilePointer()));
-            rafile.seek(location + getLength());
+            readData(dinstream, fheader);
+            readExtraDataLength(dinstream);
+            readExtraData(dinstream, fheader, getExtraDataLength());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private int readName(RandomAccessFile rafile) throws IOException {
-        //4.2.3.13 Layer Name:?
-        // Layer name: Pascal string, padded to a multiple of 4 bytes.
-        int length_Name = rafile.readByte() & 0xFF;
-        int temp = (1 + length_Name) % 4;
-        int len;
-        if (temp != 0) {
-            len = 4 - temp;
-        } else {
-            len = 0;
+    public void readData(DataInputStream dinstream, FileHeader fheader) throws IOException {
+        //Rectangle:4*4
+        //4*4,Rectangle containing the contents of the layer. Specified as top, left, bottom, right coordinates
+        setTop(dinstream.readInt());
+        setLeft(dinstream.readInt());
+        setBottom(dinstream.readInt());
+        setRight(dinstream.readInt());
+        length_ += 16;
+
+        //Channels:2
+        //2,Number of channels in the layer
+        int channels = dinstream.readShort();
+        setChannels(channels);
+        length_ += 2;
+
+        //6 * number of channels,Channel information. Six bytes per channel, consisting of:
+        //2 bytes for Channel ID: 0 = red, 1 = green, etc.;
+        //-1 = transparency mask; -2 = user supplied layer mask, -3 real user supplied layer mask (when both a user mask and a vector mask are present)
+        //4 bytes for length of corresponding channel data. (**PSB** 8 bytes for length of corresponding channel data.) See See Channel image data for structure of channel data.
+        arrayList_ChannelInfo = new ArrayList<ChannelInfo>();
+        for (int j = 0; j < channels; j++) {
+            ChannelInfo cinfo = new ChannelInfo();
+            cinfo.read(dinstream, fheader);
+            arrayList_ChannelInfo.add(j, cinfo);
+            length_ += cinfo.getLength();
+            //            System.out.println(cinfo.toString());
         }
-        length_Name += len;
-        byte[] arr = new byte[length_Name];
-        rafile.read(arr);
-        setNameBytes(arr);
-        System.out.print("layerrecords read name length: " + length_Name);
-        System.out.println("/name: " + getName("gbk"));
-        //        System.out.println("name_Layer: " + getName(getCharset()));
-        return 1 + length_Name;
+
+        //Blend Mode Signature:4
+        //4,Blend mode signature: '8BIM
+        byte[] arr = new byte[4];
+        dinstream.read(arr);
+        length_ += 4;
+        setSignature(new String(arr));
+
+        //Blend Mode Key:4
+        //4,Blend mode key:
+        // 'pass' = pass through, 'norm' = normal, 'diss' = dissolve, 'dark' = darken, 'mul ' = multiply, 'idiv' = color burn, 'lbrn' = linear burn, 'dkCl' = darker color, 'lite' = lighten, 'scrn' = screen, 'div ' = color dodge, 'lddg' = linear dodge, 'lgCl' = lighter color, 'over' = overlay, 'sLit' = soft light, 'hLit' = hard light, 'vLit' = vivid light, 'lLit' = linear light, 'pLit' = pin light, 'hMix' = hard mix, 'diff' = difference, 'smud' = exclusion, 'fsub' = subtract, 'fdiv' = divide 'hue ' = hue, 'sat ' = saturation, 'colr' = color, 'lum ' = luminosity,
+        arr = new byte[4];
+        dinstream.read(arr);
+        length_ += 4;
+        setBlendModeKey(new String(arr));
+
+        //Opacity:1
+        //1,Opacity. 0 = transparent ... 255 = opaque
+        setOpacity(dinstream.readByte() & 0xFF);
+        length_ += 1;
+
+        //Clipping:1
+        //1,Clipping: 0 = base, 1 = non-base
+        setClipping(dinstream.readByte());
+        length_ += 1;
+
+        //Flags:1
+        //1,Flags:
+        // bit 0 = transparency protected;
+        // bit 1 = visible;
+        // bit 2 = obsolete;
+        // bit 3 = 1 for Photoshop 5.0 and later, tells if bit 4 has useful information;
+        // bit 4 = pixel data irrelevant to appearance of document
+        int flags = dinstream.readByte();
+        setFlags(flags);
+        length_ += 1;
+        is_Transparency_Protected = (flags % 2) != 0;
+        is_Visible = ((flags >> 1) % 2) != 0;
+        is_Obsolete = ((flags >> 2) % 2) == 0;
+        is_Pixel_Data_Useful = ((flags >> 3) % 2) != 0;
+        if (is_Pixel_Data_Useful) {
+            is_Pixel_Data_Irrelevant = ((flags >> 4) % 2) != 0;
+        }
+
+        //Filler:1
+        //1,Filler (zero)
+        setFiller(dinstream.readByte());
+        length_ += 1;
     }
 
-    private long readLayerBlendingRangesData(RandomAccessFile rafile) {
-        //4.2.3.12 Layer Blending Ranges:?
-        // Layer blending ranges: See See Layer blending ranges data.
-        brdata = new BlendingRangesData();
-        brdata.read(rafile);
-        System.out.println(brdata.toString());
-        System.out.println();
-        return brdata.getLength();
+    private void readExtraDataLength(DataInputStream dinstream) throws IOException {
+        //Extra Data Length:4
+        //4,Length of the extra data field ( = the total length of the next five fields).
+        setExtraDataLength(dinstream.readInt());
+        length_ += 4 + getExtraDataLength();
     }
 
-    private long readMaskOrAdjustmentData(RandomAccessFile rafile) {
-        //4.2.3.11 Extra Data ?(Layer mask / adjustment layer data)
-        // Layer mask data: See See Layer mask / adjustment layer data for structure. Can be 40 bytes, 24 bytes, or 4 bytes if no layer mask
-        moadata = new MaskOrAdjustmentData();
-        moadata.read(rafile);
-        System.out.println(moadata.toString());
-        System.out.println();
-        return moadata.getLength();
-    }
-
-    private void readExtraDataArray(RandomAccessFile rafile, FileHeader fheader, long length) throws IOException {
-        long length_moadata = readMaskOrAdjustmentData(rafile);
-
-        long length_brdata = readLayerBlendingRangesData(rafile);
-
-        int length_name = readName(rafile);
-
-        long length_ = length - length_moadata - length_brdata - length_name;
-        long length_alinfo = readAdditionalLayerInfo(rafile, fheader, length_);
-
-        long space = length_ - length_alinfo;
-//        System.out.println("layer records alinfo read space: " + space);
-        if (space > 0) {
-            rafile.skipBytes((int) space);
+    private void readExtraData(DataInputStream dinstream, FileHeader fheader, int length) throws IOException {
+        if (length > 0) {
+            byte[] arr = new byte[length];
+            dinstream.read(arr);
+            setExtraData(arr);
+            readExtraDataArray(arr, fheader);
         }
     }
 
-    private long readAdditionalLayerInfo(RandomAccessFile rafile, FileHeader fheader, long length) throws IOException {
-        long location = rafile.getFilePointer();
-        // Additional Layer Information:?
-        // (Photoshop 4.0 and later)
-        // Series of tagged blocks containing various types of data. See See Additional Layer Information for the list of the types of data that can be included here.
+    private void readExtraDataArray(byte[] array, FileHeader fheader) throws IOException {
+        try {
+            DataInputStream dinstream = new DataInputStream(new ByteArrayInputStream(array));
+            //Layer mask data:variable
+            //variable,Layer mask data: See See Layer mask / adjustment layer data for structure. Can be 40 bytes, 24 bytes, or 4 bytes if no layer mask
+            moadata = new MaskOrAdjustmentData();
+            moadata.read(dinstream);
+            int length_moadata = moadata.getLength();
+            System.out.println(moadata.toString());
+
+            //Layer Blending Ranges:variable
+            //variable,Layer blending ranges: See See Layer blending ranges data.
+            brdata = new BlendingRangesData();
+            brdata.read(dinstream);
+            int length_brdata = brdata.getLength();
+            System.out.println(brdata.toString());
+
+            //Layer Name:variable
+            //variable,Layer name: Pascal string, padded to a multiple of 4 bytes.
+            int length_Name = dinstream.readByte() & 0xFF;
+            int temp = (1 + length_Name) % 4;
+            int len;
+            if (temp != 0) {
+                len = 4 - temp;
+            } else {
+                len = 0;
+            }
+            length_Name += len;
+            byte[] arr = new byte[length_Name];
+            dinstream.read(arr);
+            setCharset("gbk");
+            setNameBytes(arr);
+            System.out.print("layerrecords read name length: " + length_Name);
+            System.out.println("/name: " + getName("gbk"));
+            //        System.out.println("name_Layer: " + getName(getCharset()));
+
+            int length_alinfo = array.length - length_moadata - length_brdata - length_Name;
+            readAdditionalLayerInfo(dinstream, fheader, length_alinfo);
+            dinstream.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void readAdditionalLayerInfo(DataInputStream dinstream, FileHeader fheader, int length) throws IOException {
+        //Additional Layer Information:
+        //There are several types of layer information that have been added in Photoshop 4.0 and later. These exist at the end of the layer records structure (see the last row of See Layer records). They have the following structure:
         arrayList_AdditionalLayerInfo = new ArrayList<AdditionalLayerInfo>();
 
         String signature;
         long offset = 0;
         byte[] arr;
         while (offset < length) {
+            dinstream.mark((int) offset);
             arr = new byte[4];
-            rafile.read(arr);
+            dinstream.read(arr);
             signature = new String(arr);
-            rafile.seek(rafile.getFilePointer() - 4);
+            dinstream.reset();
             if (
                     signature.equalsIgnoreCase(AdditionalLayerInfo.Signature_8BIM) ||
                             signature.equalsIgnoreCase(AdditionalLayerInfo.Signature_8B64)
             ) {
                 AdditionalLayerInfo alinfo = new AdditionalLayerInfo();
-                alinfo.read(rafile, fheader);
+                alinfo.read(dinstream, fheader);
                 String key = alinfo.getKey();
                 if (null != key) {
                     arrayList_AdditionalLayerInfo.add(alinfo);
@@ -368,8 +529,6 @@ public class LayerRecords {
                 // throw new IOException("The Signature of the Additional Layer Information is wrong.");
             }
         }
-        //readAdditionalInfoArray();
-        return rafile.getFilePointer() - location;
     }
 
     private void readAdditionLayerInfo(byte[] array, String key) throws IOException {
@@ -388,119 +547,6 @@ public class LayerRecords {
                 System.out.println(ulname.toString());
             }
         }
-    }
-
-    private void readExtraData(RandomAccessFile rafile, FileHeader fheader, int length) throws IOException {
-        readExtraDataArray(rafile, fheader, length);
-        //        if (length_ExtraData > 0) {
-        //            byte[] arr=new byte[length_ExtraData];
-        //            readExtraDataArray(arr, fheader);
-        //        }
-    }
-
-    private int readExtraDataLength(RandomAccessFile rafile) throws IOException {
-        //4.2.3.10 Extra Data Length:4
-        // Length of the extra data field ( = the total length of the next five fields).
-        int length = rafile.readInt();
-        length_ += 4;
-        return length;
-    }
-
-    private void readFiller(RandomAccessFile rafile) throws IOException {
-        //4.2.3.9 Filler:1
-        // Filler (zero)
-        filler = rafile.readByte();
-        length_ += 1;
-        if (filler != 0) {
-            filler = 0;
-        }
-    }
-
-    private void readFlags(RandomAccessFile rafile) throws IOException {
-        //4.2.3.8 Flags:1
-        // Flags:
-        // bit 0 = transparency protected;
-        // bit 1 = visible;
-        // bit 2 = obsolete;
-        // bit 3 = 1 for Photoshop 5.0 and later, tells if bit 4 has useful information;
-        // bit 4 = pixel data irrelevant to appearance of document
-        flags = rafile.readByte();
-        length_ += 1;
-        is_Transparency_Protected = (flags % 2) != 0;
-        is_Visible = ((flags >> 1) % 2) != 0;
-        is_Obsolete = ((flags >> 2) % 2) == 0;
-        is_Pixel_Data_Useful = ((flags >> 3) % 2) != 0;
-        if (is_Pixel_Data_Useful) {
-            is_Pixel_Data_Irrelevant = ((flags >> 4) % 2) != 0;
-        }
-    }
-
-    private void readClipping(RandomAccessFile rafile) throws IOException {
-        //4.2.3.7 Clipping:1
-        // Clipping: 0 = base, 1 = non-base
-        clipping = rafile.readByte();
-        length_ += 1;
-    }
-
-    private void readOpacity(RandomAccessFile rafile) throws IOException {
-        //4.2.3.6 Opacity:1
-        // Opacity. 0 = transparent ... 255 = opaque
-        opacity = rafile.readByte() & 0xFF;
-        length_ += 1;
-    }
-
-    private void readBlendModeKey(RandomAccessFile rafile) throws IOException {
-        //4.2.3.5 Blend Mode:4
-        // Blend mode key:
-        // 'pass' = pass through, 'norm' = normal, 'diss' = dissolve, 'dark' = darken, 'mul ' = multiply, 'idiv' = color burn, 'lbrn' = linear burn, 'dkCl' = darker color, 'lite' = lighten, 'scrn' = screen, 'div ' = color dodge, 'lddg' = linear dodge, 'lgCl' = lighter color, 'over' = overlay, 'sLit' = soft light, 'hLit' = hard light, 'vLit' = vivid light, 'lLit' = linear light, 'pLit' = pin light, 'hMix' = hard mix, 'diff' = difference, 'smud' = exclusion, 'fsub' = subtract, 'fdiv' = divide 'hue ' = hue, 'sat ' = saturation, 'colr' = color, 'lum ' = luminosity,
-        byte[] arr = new byte[4];
-        rafile.read(arr);
-        length_ += 4;
-        key_BlendMode = new String(arr);
-    }
-
-    private void readBlendModeSignature(RandomAccessFile rafile) throws IOException {
-        //4.2.3.4 Blend Mode Signature:4
-        // Blend mode signature: '8BIM
-        byte[] arr = new byte[4];
-        rafile.read(arr);
-        length_ += 4;
-        signature = new String(arr);
-        if (!signature.equalsIgnoreCase(Signature_8BIM)) {
-            throw new IOException("BlendMode signature is wrong.");
-        }
-    }
-
-    private void readChannelInfo(RandomAccessFile rafile, FileHeader fheader) throws IOException {
-        int channels = readChannels(rafile);
-        long location = rafile.getFilePointer();
-        arrayList_ChannelInfo = new ArrayList<ChannelInfo>();
-        for (int j = 0; j < channels; j++) {
-            ChannelInfo cinfo = new ChannelInfo();
-            cinfo.read(rafile, fheader);
-            arrayList_ChannelInfo.add(j, cinfo);
-//            length_ += cinfo.getLength();
-            System.out.println(cinfo.toString());
-        }
-        length_ += rafile.getFilePointer() - location;
-    }
-
-    private int readChannels(RandomAccessFile rafile) throws IOException {
-        //4.2.3.2 Channels:2
-        // Number of channels in the layer
-        int channels = rafile.readShort();
-        length_ += 2;
-        return channels;
-    }
-
-    private void readRectangle(RandomAccessFile rafile) throws IOException {
-        //4.2.3.1 Rectangle:4*4
-        // Rectangle containing the contents of the layer. Specified as top, left, bottom, right coordinates
-        top = rafile.readInt();
-        left = rafile.readInt();
-        bottom = rafile.readInt();
-        right = rafile.readInt();
-        length_ += 16;
     }
 
     public String toString() {
@@ -524,8 +570,8 @@ public class LayerRecords {
         sbuilder.append("/Sub Layer Type: " + getSubLayerType());
         sbuilder.append("/Sun Layer Type Name: " + getSubLayerTypeName());
         sbuilder.append("/arr Name length: " + getNameBytes().length);
-        sbuilder.append("/Layer Name: " + getName("gbk"));
-        //        sbuilder.append("/Layer Name: " + getName(getCharset()));
+//        sbuilder.append("/Layer Name: " + getName("gbk"));
+        sbuilder.append("/Layer Name: " + getName(getCharset()));
         return sbuilder.toString();
     }
 }
