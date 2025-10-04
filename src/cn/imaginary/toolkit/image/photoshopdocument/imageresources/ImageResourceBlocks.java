@@ -1,16 +1,9 @@
 package cn.imaginary.toolkit.image.photoshopdocument.imageresources;
 
 // import cn.imaginary.toolkit.image.photoshopdocument.imageresources.ImageResourceIDs;
-
-import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.SortedMap;
-import javaev.lang.StringUtils;
 
 public class ImageResourceBlocks {
 
@@ -20,22 +13,34 @@ public class ImageResourceBlocks {
 
     private int id;
     private int length_Data;
-
-    private long length_;
+    private int length_;
 
     private byte[] arr_Data;
     private byte[] arr_Name;
 
     private Charset charset;
 
-    public ImageResourceBlocks() {}
+    public ImageResourceBlocks() {
+    }
 
     public String getSignature() {
         return signature;
     }
 
+    public void setSignature(String signature) throws IOException {
+        if (signature.equalsIgnoreCase(Signature_8BIM)) {
+            this.signature = signature;
+        } else {
+            throw new IOException("The signature of the Image Resource Blocks is wrong.");
+        }
+    }
+
     public int getID() {
         return id;
+    }
+
+    public void setID(int id) {
+        this.id = id;
     }
 
     public String getName(String charsetName) {
@@ -96,91 +101,69 @@ public class ImageResourceBlocks {
         arr_Data = array;
     }
 
-    public long getLength() {
+    public int getLength() {
         return length_;
     }
 
-    private void readData(RandomAccessFile rafile, int id) throws IOException {
-        //3.2.5 Resource Data:Variable
-        //Variable,The resource data, described in the sections on the individual resource types. It is padded to make the size even.
-        readDataArray(rafile, length_Data, id);
+    public void setLength(int length) {
+        length_ = length;
     }
 
-    private void readDataLength(RandomAccessFile rafile) throws IOException {
-        //3.2.4 Resource Data Size:4
-        //4,Actual size of resource data that follows
-        length_Data = rafile.readInt();
-        length_ += 4;
-        if ((length_Data % 2) != 0) {
-            length_Data++;
-        }
+    public int getDataLength() {
+        return length_Data;
     }
 
-    private void readName(RandomAccessFile rafile) throws IOException {
-        //3.2.3 Name:Variable
-        //Variable,Name: Pascal string, padded to make the size even (a null name consists of two bytes of 0)
-        int length_Name = rafile.readByte() & 0xFF;
-        length_ += 1;
-        if (length_Name % 2 == 0) {
-            length_Name++;
-        }
-        byte[] arr = new byte[length_Name];
-        rafile.read(arr);
-        length_ += length_Name;
-        //        checkCharset(arr);
-        setNameBytes(arr);
+    public void setDataLength(int length) {
+        length_Data = length;
     }
 
-    private void readID(RandomAccessFile rafile) throws IOException {
-        //3.2.2 Image Resource ID:2
-        //2,Unique identifier for the resource. Image resource IDs contains a list of resource IDs used by Photoshop.
-        id = rafile.readShort();
-        length_ += 2;
-    }
-
-    private void readSignature(RandomAccessFile rafile) throws IOException {
-        //3.2.1 Signature:4
-        //4,Signature: '8BIM'
-        byte[] arr = new byte[4];
-        rafile.read(arr);
-        length_ += 4;
-        signature = new String(arr);
-
-        if (!signature.equalsIgnoreCase(Signature_8BIM)) {
-            throw new IOException("The signature of the Image Resource Blocks is wrong.");
-        }
-    }
-
-    public void read(RandomAccessFile rafile) {
+    public void read(DataInputStream dinstream) {
         try {
-            long location = rafile.getFilePointer();
+            //3.2.1 Signature:4
+            //4,Signature: '8BIM'
+            byte[] arr = new byte[4];
+            dinstream.read(arr);
+            setSignature(new String(arr));
 
-            readSignature(rafile);
-            readID(rafile);
-            readName(rafile);
-            readDataLength(rafile);
-            readData(rafile, id);
+            //3.2.2 Image Resource ID:2
+            //2,Unique identifier for the resource. Image resource IDs contains a list of resource IDs used by Photoshop.
+            setID(dinstream.readShort());
 
-            length_ += length_Data;
-            rafile.seek(location + getLength());
+            //3.2.3 Name:Variable
+            //Variable,Name: Pascal string, padded to make the size even (a null name consists of two bytes of 0)
+            int length_Name = dinstream.readByte() & 0xFF;
+            if (length_Name % 2 == 0) {
+                length_Name++;
+            }
+            arr = new byte[length_Name];
+            dinstream.read(arr);
+            setNameBytes(arr);
+
+            //3.2.4 Resource Data Size:4
+            //4,Actual size of resource data that follows
+            int length = dinstream.readInt();
+            if ((length % 2) != 0) {
+                length++;
+            }
+            setDataLength(length);
+            setLength(4 + 2 + 1 + getNameBytes().length + 4 + getDataLength());
+
+            //3.2.5 Resource Data:Variable
+            //Variable,The resource data, described in the sections on the individual resource types. It is padded to make the size even.
+            if (length > 0) {
+                arr = new byte[length];
+                dinstream.read(arr);
+                setData(arr);
+                readData(arr, id);
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void readDataArray(byte[] array, int length, int id) {
+    private void readData(byte[] array, int id) {
         /*ImageResourceIDs irIDs = new ImageResourceIDs();
         irIDs.read(array, id);*/
-    }
-
-    private void readDataArray(RandomAccessFile rafile, int length, int id) throws IOException {
-        if (length > 0) {
-            byte[] arr = new byte[length];
-            rafile.read(arr);
-            setData(arr);
-            readDataArray(arr, length, id);
-        }
-        //        rafile.skipBytes(length);
     }
 
     public String toString() {
