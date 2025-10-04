@@ -3,7 +3,6 @@ package cn.imaginary.toolkit.image.photoshopdocument.layerandmask.additional;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 
 public class SectionDvider {
 
@@ -13,17 +12,23 @@ public class SectionDvider {
     public static int LayerType_Folder_Open = 1;
     public static int LayerType_Folder_Closed = 2;
     public static int LayerType_Hidden = 3;
+
+    private String key_BlendMode;
+
+    public static String[] arr_LayerType = {"layer_File", "layer_Folder_Open", "layer_Folder_Closed", "layer_Hidden"};
+    public static String[] arr_LayerType_Sub = {"sub_Normal", "sub_Scene_Group"};
+
     public static String Key = "lsct";
-    public static String[] arr_LayerType = { "layer_File", "layer_Folder_Open", "layer_Folder_Closed", "layer_Hidden" };
-    public static String[] arr_LayerType_Sub = { "sub_Normal", "sub_Scene_Group" };
+    public static String Signature_8BIM = "8BIM";
+
     private int layerType_Sub;
     private int layerType;
-    private String key_BlendMode;
-    private long length_;
-    public static String Signature_8BIM = "8BIM";
     private int length_Data;
 
-    public SectionDvider() {}
+    private long length_;
+
+    public SectionDvider() {
+    }
 
     public int getLayerType() {
         return layerType;
@@ -85,26 +90,22 @@ public class SectionDvider {
         return arr_LayerType_Sub[subType];
     }
 
-    private void readKey(String key) throws IOException {
-        if (null == key || !key.equalsIgnoreCase(Key)) {
-            throw new IOException("Section dvider setting key is wrong.");
-        }
-    }
-
     public void read(byte[] array, String key) {
         try {
-            DataInputStream dinstream = new DataInputStream(new ByteArrayInputStream(array));
             // Section divider setting (Photoshop 6.0)
             // Key is 'lsct' . Data is as follows:
             // Section Divider setting
-
             readKey(key);
             readDataLength(array);
-            readData(dinstream);
-
-            dinstream.close();
+            readData(array);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void readKey(String key) throws IOException {
+        if (null == key || !key.equalsIgnoreCase(Key)) {
+            throw new IOException("Section dvider setting key is wrong.");
         }
     }
 
@@ -112,49 +113,54 @@ public class SectionDvider {
         length_Data = array.length;
     }
 
-    public void readData(DataInputStream dinstream) throws IOException {
-        readType(dinstream);
+    public void readData(byte[] array) throws IOException {
+        try {
+            DataInputStream dinstream = new DataInputStream(new ByteArrayInputStream(array));
+            // 4,Type. 4 possible values, 0 = any other type of layer, 1 = open "folder", 2 = closed "folder", 3 = bounding section divider, hidden in the UI
+            int type = dinstream.readInt();
+            length_ += 4;
+            setLayerType(type);
 
-        int length = length_Data;
-        if (length >= 12) {
-            // Following is only present if length >= 12
-            readSignature(dinstream);
-            readBlendModeKey(dinstream);
+            int length = length_Data;
+            if (length >= 12) {
+                // Following is only present if length >= 12
+                // 4,Signature: '8BIM'
+                byte[] arr = new byte[4];
+                dinstream.read(arr);
+                length_ += 4;
+                String signature = new String(arr);
+                if (!signature.equalsIgnoreCase(Signature_8BIM)) {
+                    throw new IOException("Signature is Wrong!");
+                }
 
-            if (length >= 16) {
-                // Following is only present if length >= 16
-                readSubType(dinstream);
+                // 4,Key. See blend mode keys in See Layer records.
+                arr = new byte[4];
+                dinstream.read(arr);
+                length_ += 4;
+                key_BlendMode = new String(arr);
+
+                if (length >= 16) {
+                    // Following is only present if length >= 16
+                    // 4,Sub type. 0 = normal, 1 = scene group, affects the animation timeline.
+                    setSubLayerType(dinstream.readInt());
+                    length_ += 4;
+                }
             }
+            dinstream.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    private void readSubType(DataInputStream dinstream) throws IOException {
-        // 4,Sub type. 0 = normal, 1 = scene group, affects the animation timeline.
-        setSubLayerType(dinstream.readInt());
-        length_ += 4;
+    public String toString() {
+        StringBuilder sbuilder = new StringBuilder();
+        sbuilder.append("Section Dvider setting length: " + length_);
+        sbuilder.append("/key: " + Key);
+        sbuilder.append("/layer type: " + layerType);
+        sbuilder.append("/layer type name: " + getLayerTypeName());
+        sbuilder.append("/blend mode key: " + key_BlendMode);
+        sbuilder.append("/sub layer type: " + layerType_Sub);
+        sbuilder.append("/sub layer type name: " + getSubLayerTypeName());
+        return sbuilder.toString();
     }
-
-    private void readBlendModeKey(DataInputStream dinstream) throws IOException {
-        // 4,Key. See blend mode keys in See Layer records.
-        byte[] arr = new byte[4];
-        dinstream.read(arr);
-        length_ += 4;
-        key_BlendMode = new String(arr);
-    }
-
-    private void readSignature(DataInputStream dinstream) throws IOException {
-        // 4,Signature: '8BIM'
-        byte[] arr = new byte[4];
-        dinstream.read(arr);
-        length_ += 4;
-        String signature = new String(arr);
-        if (!signature.equalsIgnoreCase(Signature_8BIM)) {
-            throw new IOException("Signature is Wrong!");
-        }
-    }
-
-    private void readType(DataInputStream dinstream) throws IOException {
-        // 4,Type. 4 possible values, 0 = any other type of layer, 1 = open "folder", 2 = closed "folder", 3 = bounding section divider, hidden in the UI
-        int type = dinstream.readInt();
-        length_ += 4;
- 
+}
