@@ -2,10 +2,12 @@ package cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer;
 
 import cn.imaginary.toolkit.image.photoshopdocument.FileHeader;
 
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
 public class ChannelInfo {
+
     private int id;
     public static int ID_Red = 0;
     public static int ID_Green = 1;
@@ -18,12 +20,7 @@ public class ChannelInfo {
     private byte[] arr_Data;
 
     //4.2.3.3 Channel Info ?
-    public ChannelInfo() {
-    }
-
-    public long getLength() {
-        return length_;
-    }
+    public ChannelInfo() {}
 
     public byte[] getData() {
         return arr_Data;
@@ -43,6 +40,14 @@ public class ChannelInfo {
 
     public int getID() {
         return id;
+    }
+
+    public long getLength() {
+        return length_;
+    }
+
+    public void setLength(long length) {
+        length_ = length;
     }
 
     public void setID(int id) throws IOException {
@@ -70,36 +75,27 @@ public class ChannelInfo {
         }
     }
 
-    private void readChannelID(RandomAccessFile rafile) throws IOException {
-        // 2 bytes for Channel ID: 0 = red, 1 = green, etc.;
-        // -1 = transparency mask; -2 = user supplied layer mask; -3 = real user supplied layer mask (when both a user mask and a vector mask are present)
-        //4.2.3.3.1 Channel ID:2
-        id = rafile.readShort();
-        length_ += 2;
-    }
-
-    private void readChannelDataLength(RandomAccessFile rafile, FileHeader fheader) throws IOException {
-        //4.2.3.3.2 Channel Data Length:4
-        // 4 bytes for length of corresponding channel data. (**PSB** 8 bytes for length of corresponding channel data.) See See Channel image data for structure of channel data.
-        if (fheader.isFilePsb()) {
-            length_Data = rafile.readLong();
-            length_ += 8;
-        } else {
-            length_Data = rafile.readInt();
-            length_ += 4;
-        }
-    }
-
-    public void read(RandomAccessFile rafile, FileHeader fheader) {
+    public void read(DataInputStream dinstream, FileHeader fheader) {
         try {
-            long location = rafile.getFilePointer();
-
             // Channel information. Six bytes per channel, consisting of:
-            readChannelID(rafile);
-            readChannelDataLength(rafile, fheader);
+            //4.2.3.3.1 Channel ID:2
+            // 2 bytes for Channel ID: 0 = red, 1 = green, etc.;
+            // -1 = transparency mask; -2 = user supplied layer mask, -3 real user supplied layer mask (when both a user mask and a vector mask are present)
+            setID(dinstream.readShort());
+            length_ += 2;
 
-            //            System.out.println("Channel Image data space: " + (location + length_ - rafile.getFilePointer()));
-            rafile.seek(location + getLength());
+            //4.2.3.3.2 Channel Data Length:4
+            // 4 bytes for length of corresponding channel data. (**PSB** 8 bytes for length of corresponding channel data.) See See Channel image data for structure of channel data.
+            long length;
+            if (fheader.isFilePsb()) {
+                length = dinstream.readLong();
+                length_ += 8;
+            } else {
+                length = dinstream.readInt();
+                length_ += 4;
+            }
+            setDataLength(length);
+            setLength(length_ + getDataLength());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
