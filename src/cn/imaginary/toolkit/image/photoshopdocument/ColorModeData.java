@@ -1,7 +1,5 @@
 package cn.imaginary.toolkit.image.photoshopdocument;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
@@ -17,25 +15,25 @@ public class ColorModeData {
     public static int Lab = 9;
 
     public static String[] arr_ColorMode = {
-        "Bitmap",
-        "Grayscale",
-        "Indexed",
-        "RGB",
-        "CMYK",
-        "Multichannel",
-        "Duotone",
-        "Lab",
+            "Bitmap",
+            "Grayscale",
+            "Indexed",
+            "RGB",
+            "CMYK",
+            "Multichannel",
+            "Duotone",
+            "Lab",
     };
 
     private int length_Data;
     private int colorMode;
-
-    private long length_;
+    private int length_;
 
     private byte[] arr_Data;
 
     //2 Color Mode Data
-    public ColorModeData() {}
+    public ColorModeData() {
+    }
 
     public static boolean isSupported(int colorMode) {
         if ((colorMode >= 0 && colorMode <= 4) || (colorMode >= 7 && colorMode <= 9)) {
@@ -66,6 +64,10 @@ public class ColorModeData {
 
     public byte[] getData() {
         return arr_Data;
+    }
+
+    public void setData(byte[] array) {
+        arr_Data = array;
     }
 
     public int getColorMode() {
@@ -111,62 +113,54 @@ public class ColorModeData {
         }
     }
 
-    public long getLength() {
+    public int getLength() {
         return length_;
     }
 
-    private void readDataLength(RandomAccessFile rafile) throws IOException {
-        //2.1 Color Data Length:4
-        //4,The length of the following color data.
-        int length = rafile.readInt();
-        length_ += 4;
-        //Only indexed color and duotone (see the mode field in the File header section) have color mode data. For all other modes, this section is just the 4-byte length field, which is set to zero.
-        //Indexed color images: length is 768; color data contains the color table for the image, in non-interleaved order.
-        //Duotone images: color data contains the duotone specification (the format of which is not documented). Other applications that read Photoshop files can treat a duotone image as a gray image, and just preserve the contents of the duotone information when reading and writing the file.
+    public void setLength(int length) {
+        length_ = length;
+    }
 
-        /*switch (colorMode) {
-            case 2:
-                length_Data = 768;
-                break;
-            case 8:
-                length_Data = length;
-                break;
-            default:
-                length_Data = 4;
-                break;
-        }*/
+    public int getDataLength() {
+        return length_Data;
+    }
 
+    public void setDataLength(int length) {
         length_Data = length;
     }
 
     public void read(RandomAccessFile rafile, int colorMode) {
         try {
-            long location = rafile.getFilePointer();
-
-            setColorMode(colorMode);
-            readDataLength(rafile);
-            readData(rafile);
-
-            length_ += length_Data;
-            rafile.seek(location + getLength());
+            readDataLength(rafile, colorMode);
+            readData(rafile, getDataLength());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void readDataArray(byte[] array) {
-        // codePreview(array);
+    private void readDataLength(RandomAccessFile rafile, int colorMode) throws IOException {
+        //2.1 Color Data Length:4
+        //4,The length of the following color data.
+        //Only indexed color and duotone (see the mode field in the File header section) have color mode data. For all other modes, this section is just the 4-byte length field, which is set to zero.
+        //Indexed color images: length is 768; color data contains the color table for the image, in non-interleaved order.
+        //Duotone images: color data contains the duotone specification (the format of which is not documented). Other applications that read Photoshop files can treat a duotone image as a gray image, and just preserve the contents of the duotone information when reading and writing the file.
+        setColorMode(colorMode);
+        setDataLength(rafile.readInt());
+        setLength(4 + getDataLength());
     }
 
-    private void readData(RandomAccessFile rafile) throws IOException {
+    private void readData(RandomAccessFile rafile, int length) throws IOException {
         //2.2 Color Data:Variable
         //Variable,The color data.
-        if (length_Data > 0) {
-            byte[] arr = new byte[length_Data];
+        if (length > 0) {
+            byte[] arr = new byte[length];
             rafile.read(arr);
-            arr_Data = arr;
+            setData(arr);
             readDataArray(arr);
         }
+    }
+
+    private void readDataArray(byte[] array) {
     }
 
     public String toString() {
