@@ -13,89 +13,119 @@ public class BlendingRangesData {
     private int grayBlend_White_Source;
     private int grayBlend_Black_Destination;
     private int grayBlend_White_Destination;
-    private int[][] arrs_grayBlend;
 
-    public BlendingRangesData() {}
+    private int[][] arrs_grayBlend;
+    private byte[] arr_Data;
+
+    public BlendingRangesData() {
+    }
 
     public int getLength() {
         return length_;
     }
 
-    public int[][] getGrayBlendArrays() {
+    public void setLength(int length) {
+        length_ = length;
+    }
+
+    public int getDataLength() {
+        return length_Data;
+    }
+
+    public void setDataLength(int length) {
+        length_Data = length;
+    }
+
+    public byte[] getData() {
+        return arr_Data;
+    }
+
+    public void setData(byte[] arr) {
+        arr_Data = arr;
+    }
+
+    public void setGrayBlendData(int[][] arrs) {
+        arrs_grayBlend = arrs;
+    }
+
+    public int[][] getGrayBlendData() {
         return arrs_grayBlend;
     }
 
-    public void read(RandomAccessFile rafile) {
+    public void read(DataInputStream dinstream) {
         try {
-            long location = rafile.getFilePointer();
-
-            readDataLength(rafile);
-            readData(rafile);
-
-            length_ += length_Data;
-//            System.out.println("blending ranges data space: " + (location + length_ - rafile.getFilePointer()));
-            rafile.seek(location + getLength());
+            readDataLength(dinstream);
+            readData(dinstream, getDataLength());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void readData(RandomAccessFile rafile) throws IOException {
-        readDataArray(rafile);
+    private void readDataLength(DataInputStream dinstream) throws IOException {
+        //Data Length:4
+        //4,Length of layer blending ranges data
+        int length = dinstream.readInt();
+        setDataLength(length);
+        setLength(4 + getDataLength());
     }
 
-    private void readDataArray(RandomAccessFile rafile) throws IOException {
-        readGrayBlend(rafile);
-        readChannelsSource(rafile);
-    }
-
-    private void readChannelsSource(RandomAccessFile rafile) throws IOException {
-        int count = (length_Data - 8) / 8;
-        if (count > 0) {
-            arrs_grayBlend = new int[4][count];
-
-            int rangeSource;
-            int rangeDestination;
-            for (int i = 0; i < count; i++) {
-                // First channel source range:4
-                // rangeSource = rafile.readInt();
-                rangeSource = rafile.readShort() & 0xff;
-                // System.out.println("black range " + i + " Source: " + rangeSource);
-
-                arrs_grayBlend[0][i] = rangeSource;
-                rangeSource = rafile.readShort() & 0xff;
-                // System.out.println("white range " + i + " Source: " + rangeSource);
-
-                arrs_grayBlend[1][i] = rangeSource;
-                // First channel destination range:4
-                // rangeSestination = rafile.readInt();
-                rangeDestination = rafile.readShort() & 0xff;
-                // System.out.println("black range " + i + " Destination: " + rangeDestination);
-
-                arrs_grayBlend[2][i] = rangeDestination;
-                rangeDestination = rafile.readShort() & 0xff;
-                // System.out.println("white range " + i + " Destination: " + rangeDestination);
-
-                arrs_grayBlend[3][i] = rangeDestination;
-            }
+    private void readData(DataInputStream dinstream, int length) throws IOException {
+        if (length > 0) {
+            byte[] arr = new byte[length];
+            dinstream.read(arr);
+            setData(arr);
+            readDataArray(arr);
         }
     }
 
-    private void readGrayBlend(RandomAccessFile rafile) throws IOException {
-        // Composite gray blend source. Contains 2 black values followed by 2 white values. Present but irrelevant for Lab & Grayscale.:4
-        grayBlend_Black_Source = rafile.readShort() & 0xff;
-        grayBlend_White_Source = rafile.readShort() & 0xff;
+    private void readDataArray(byte[] array) {
+        try {
+            int length = array.length;
+            DataInputStream dinstream = new DataInputStream(new ByteArrayInputStream(array));
+            //Composite gray blend source:4
+            //4,Composite gray blend source. Contains 2 black values followed by 2 white values. Present but irrelevant for Lab & Grayscale.
+            grayBlend_Black_Source = dinstream.readShort() & 0xff;
+            grayBlend_White_Source = dinstream.readShort() & 0xff;
 
-        // Composite gray blend destination range:4
-        // grayBlend_Destination = rafile.readInt();
-        grayBlend_Black_Destination = rafile.readShort() & 0xff;
-        grayBlend_White_Destination = rafile.readShort() & 0xff;
-    }
+            //Composite gray blend destination:4
+            //4,Composite gray blend destination range
+            // grayBlend_Destination = rafile.readInt();
+            grayBlend_Black_Destination = dinstream.readShort() & 0xff;
+            grayBlend_White_Destination = dinstream.readShort() & 0xff;
 
-    private void readDataLength(RandomAccessFile rafile) throws IOException {
-        // Length of layer blending ranges data:4
-        length_Data = rafile.readInt();
-        length_ += 4;
+            int count = (length - 8) / 8;
+            if (count > 0) {
+                int[][] arrs = new int[count][4];
+
+                int rangeSource;
+                int rangeDestination;
+                for (int i = 0; i < count; i++) {
+                    //channel source range:4
+                    //4,channel source range
+                    rangeSource = dinstream.readShort() & 0xff;
+                    arrs[i][0] = rangeSource;
+                    // System.out.println("black range " + i + " Source: " + rangeSource);
+
+                    rangeSource = dinstream.readShort() & 0xff;
+                    arrs[i][1] = rangeSource;
+                    // System.out.println("white range " + i + " Source: " + rangeSource);
+
+                    //channel destination range:4
+                    //4,channel destination range
+                    rangeDestination = dinstream.readShort() & 0xff;
+                    arrs[i][2] = rangeDestination;
+                    // System.out.println("black range " + i + " Destination: " + rangeDestination);
+
+                    rangeDestination = dinstream.readShort() & 0xff;
+                    arrs[i][3] = rangeDestination;
+                    // System.out.println("white range " + i + " Destination: " + rangeDestination);
+                }
+                setGrayBlendData(arrs);
+            }
+            dinstream.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public String toString() {
