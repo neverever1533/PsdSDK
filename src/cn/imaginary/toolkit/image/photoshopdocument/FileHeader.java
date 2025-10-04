@@ -18,7 +18,7 @@ public class FileHeader {
 
     private String signature;
 
-    private String[] arr_Version = { "Unknown", "PSD", "PSB" };
+    private String[] arr_Version = {"Unknown", "PSD", "PSB"};
 
     private int channels;
     private int channels_Min = 1;
@@ -32,16 +32,26 @@ public class FileHeader {
     private int pixels_Max_PSB = 300000;
     private int reserved;
     private int version;
-
     private int length_;
+    private int length_Data;
 
+    private byte[] arr_Data;
     private byte[] arr_Reserved = new byte[6];
 
     //1 FileHeader:26
-    public FileHeader() {}
+    public FileHeader() {
+    }
 
     public String getSignature() {
         return signature;
+    }
+
+    public void setSignature(String signature) throws IOException {
+        if (signature.equalsIgnoreCase(Signature_8BPS)) {
+            this.signature = signature;
+        } else {
+            throw new IOException("The Signature of the File Header is wrong.");
+        }
     }
 
     public int getVersion() {
@@ -143,108 +153,107 @@ public class FileHeader {
         return reserved;
     }
 
-    public void setReserved(int reserved) {
+    public void setReserved(int reserved) throws IOException {
         if (reserved != 0) {
-            reserved = 0;
+            throw new IOException("The reserved of the FileHeader is wrong.");
         }
         this.reserved = reserved;
     }
 
-    public long getLength() {
+    public int getLength() {
         return length_;
     }
 
-    private void readSignature(RandomAccessFile rafile) throws IOException {
-        //1.1 Signature:4
-        //4,Signature: always equal to '8BPS' . Do not try to read the file if the signature does not match this value.
-        byte[] arr = new byte[4];
-        rafile.read(arr);
-        length_ += 4;
-        signature = new String(arr);
-        if (!signature.equalsIgnoreCase(Signature_8BPS)) {
-            throw new IOException("The Signature of the File Header is wrong.");
-        }
+    public void setLength(int length) {
+        length_ = length;
     }
 
-    private void readVersion(RandomAccessFile rafile) throws IOException {
-        //1.2 Version:2
-        //2,Version: always equal to 1. Do not try to read the file if the version does not match this value. (**PSB** version is 2.)
-        version = rafile.readShort();
-        length_ += 2;
+    public int getDataLength() {
+        return length_Data;
     }
 
-    private void readReserved(RandomAccessFile rafile) throws IOException {
-        //1.3 Reserved:6
-        //6,Reserved: must be zero.
-        rafile.skipBytes(6);
-        length_ += 6;
-        reserved = 0;
+    public void setDataLength(int length) {
+        length_Data = length;
     }
 
-    private void readChannels(RandomAccessFile rafile) throws IOException {
-        //1.4 Channels:2
-        //2,The number of channels in the image, including any alpha channels. Supported range is 1 to 56.
-        channels = rafile.readShort();
-        length_ += 2;
+    private void setData(byte[] array) {
+        arr_Data = array;
     }
 
-    private void readHeight(RandomAccessFile rafile) throws IOException {
-        //1.5 Height:4
-        //4,The height of the image in pixels. Supported range is 1 to 30,000.(**PSB** max of 300,000.)
-        height = rafile.readInt();
-        length_ += 4;
-    }
-
-    private void readWidth(RandomAccessFile rafile) throws IOException {
-        //1.6 Width:4
-        //4,The width of the image in pixels. Supported range is 1 to 30,000.(*PSB** max of 300,000)
-        width = rafile.readInt();
-        length_ += 4;
-    }
-
-    private void readDepth(RandomAccessFile rafile) throws IOException {
-        //1.7 Depth:2
-        //2,Depth: the number of bits per channel. Supported values are 1, 8, 16 and 32.
-        depth = rafile.readShort();
-        length_ += 2;
-    }
-
-    private void readColorMode(RandomAccessFile rafile) throws IOException {
-        //1.8 ColorMode:2
-        //2,The color mode of the file. Supported values are: Bitmap = 0; Grayscale = 1; Indexed = 2; RGB = 3; CMYK = 4; Multichannel = 7; Duotone = 8; Lab = 9.
-        colorMode = rafile.readShort();
-        length_ += 2;
+    private byte[] getData() {
+        return arr_Data;
     }
 
     public void read(RandomAccessFile rafile) {
         try {
-            long location = rafile.getFilePointer();
-
-            readData(rafile);
-
-            rafile.seek(location + getLength());
+            readDataLength();
+            readData(rafile, getDataLength());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void readData(RandomAccessFile rafile) throws IOException {
-        readSignature(rafile);
-        readVersion(rafile);
-        readReserved(rafile);
-        readChannels(rafile);
-        readHeight(rafile);
-        readWidth(rafile);
-        readDepth(rafile);
-        readColorMode(rafile);
+    private void readDataLength() throws IOException {
+        setDataLength(26);
+        setLength(getDataLength());
+    }
+
+    private void readData(RandomAccessFile rafile, int length) throws IOException {
+        if (length > 0) {
+            byte[] arr = new byte[length];
+            rafile.read(arr);
+            setData(arr);
+            readDataArray(arr);
+        }
+    }
+
+    private void readDataArray(byte[] array) throws IOException {
+        DataInputStream dinstream = new DataInputStream(new ByteArrayInputStream(array));
+
+        //1.1 Signature:4
+        //4,Signature: always equal to '8BPS' . Do not try to read the file if the signature does not match this value.
+        byte[] arr = new byte[4];
+        dinstream.read(arr);
+        setSignature(new String(arr));
+
+        //1.2 Version:2
+        //2,Version: always equal to 1. Do not try to read the file if the version does not match this value. (**PSB** version is 2.)
+        setVersion(dinstream.readShort());
+
+        //1.3 Reserved:6
+        //6,Reserved: must be zero.
+        arr = new byte[6];
+        dinstream.read(arr);
+        setReserved(0);
+
+        //1.4 Channels:2
+        //2,The number of channels in the image, including any alpha channels. Supported range is 1 to 56.
+        setChannels(dinstream.readShort());
+
+        //1.5 Height:4
+        //4,The height of the image in pixels. Supported range is 1 to 30,000.(**PSB** max of 300,000.)
+        setHeight(dinstream.readInt());
+
+        //1.6 Width:4
+        //4,The width of the image in pixels. Supported range is 1 to 30,000.(*PSB** max of 300,000)
+        setWidth(dinstream.readInt());
+
+        //1.7 Depth:2
+        //2,Depth: the number of bits per channel. Supported values are 1, 8, 16 and 32.
+        setDepth(dinstream.readShort());
+
+        //1.8 ColorMode:2
+        //2,The color mode of the file. Supported values are: Bitmap = 0; Grayscale = 1; Indexed = 2; RGB = 3; CMYK = 4; Multichannel = 7; Duotone = 8; Lab = 9.
+        setColorMode(dinstream.readShort());
+        dinstream.close();
     }
 
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
         sbuilder.append("FileHeader Length: " + getLength());
-        sbuilder.append("/Signature: " + signature);
+        sbuilder.append("/Signature: " + getSignature());
         sbuilder.append("/Version: " + getVersion());
-        sbuilder.append("/Resvered: " + reserved);
+        sbuilder.append("/Resvered: " + getReserved());
         sbuilder.append("/Channels: " + getChannels());
         sbuilder.append("/Height: " + getHeight());
         sbuilder.append("/Width: " + getWidth());
