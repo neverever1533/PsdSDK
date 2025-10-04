@@ -1,17 +1,15 @@
 package cn.imaginary.toolkit.image.photoshopdocument;
 
-import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.AdditionalLayerInfo;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.GlobalLayerMaskInfo;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.LayerRecords;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelImageData;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelInfo;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
-import java.util.SortedMap;
 
 public class LayerAndMaskInfo {
 
@@ -19,16 +17,66 @@ public class LayerAndMaskInfo {
 
     private long length_;
     private long length_Data;
+    private long length_LayerInfo;
+    private long length_Data_LayerInfo;
 
     private ArrayList<LayerRecords> arrayList_LayerRecords;
 
     private int count_Layer;
 
+    private byte[] arr_Data;
+    private byte[] arr_Data_LayerInfo;
+
     //4 Layer and Mask Information
-    public LayerAndMaskInfo() {}
+    public LayerAndMaskInfo() {
+    }
 
     public long getLength() {
         return length_;
+    }
+
+    public long getDataLength() {
+        return length_Data;
+    }
+
+    public long getLayerInfoLength() {
+        return length_LayerInfo;
+    }
+
+    public long getLayerInfoDataLength() {
+        return length_Data_LayerInfo;
+    }
+
+    public byte[] getData() {
+        return arr_Data;
+    }
+
+    public void setData(byte[] array) {
+        arr_Data = array;
+    }
+
+    public byte[] getLayerInfoData() {
+        return arr_Data_LayerInfo;
+    }
+
+    public void setLayerInfoData(byte[] array) {
+        arr_Data_LayerInfo = array;
+    }
+
+    public void setLength(long length) {
+        length_ = length;
+    }
+
+    public void setDataLength(long length) {
+        length_Data = length;
+    }
+
+    public void setLayerInfoLength(long length) {
+        length_LayerInfo = length;
+    }
+
+    public void setLayerInfoDataLength(long length) {
+        length_Data_LayerInfo = length;
     }
 
     public int getLayerCount() {
@@ -49,134 +97,116 @@ public class LayerAndMaskInfo {
 
     public void read(RandomAccessFile rafile, FileHeader fheader) {
         try {
-            long location = rafile.getFilePointer();
-
             readDataLength(rafile, fheader);
-            readData(rafile, fheader);
-
-            length_ += length_Data;
-            long space = location + length_ - rafile.getFilePointer();
-            System.out.println("layer and mask space: " + space);
-            if (space > 0) {
-                rafile.skipBytes((int) space);
-            }
-            rafile.seek(location + getLength());
+            readData(rafile, fheader, getDataLength());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void readData(RandomAccessFile rafile, FileHeader fheader) throws IOException {
-        readDataArray(rafile, fheader);
-    }
-
-    private void readDataArray(RandomAccessFile rafile, FileHeader fheader) throws IOException {
-        long space = length_Data;
-        long length_layer = readLayerInfo(rafile, fheader);
-        space -= length_layer;
-        System.out.println("layer and mask layerinfo read space: " + space);
-    }
-
-    private long readChanelImageData(RandomAccessFile rafile, FileHeader fheader) throws IOException {
-        long location = rafile.getFilePointer();
-        int count = 0;
-        for (Iterator<LayerRecords> it = arrayList_LayerRecords.iterator(); it.hasNext();) {
-            LayerRecords lrecords = it.next();
-            System.out.println("Layer count: " + count++);
-            ArrayList<ChannelInfo> arrayList_ChannelInfo = lrecords.getChannelInfoList();
-            for (Iterator<ChannelInfo> itr = arrayList_ChannelInfo.iterator(); itr.hasNext();) {
-                ChannelInfo cinfo = itr.next();
-                ChannelImageData cidata = new ChannelImageData();
-                cidata.setDataLength(cinfo.getDataLength());
-                cidata.read(rafile, fheader, lrecords.getWidth(), lrecords.getHeight());
-                cinfo.setData(cidata.getData());
-                System.out.print("channel id: " + cinfo.getID());
-                System.out.println("/" + cidata.toString());
-            }
-            System.out.println();
-        }
-        return rafile.getFilePointer() - location;
-    }
-
-    private long readLayerRecords(RandomAccessFile rafile, FileHeader fheader) throws IOException {
-        //4.2.2 Layer Count 2
-        int count_Layer = rafile.readShort();
-
-        long location = rafile.getFilePointer();
-        //4.2.3 Layer Records ?
-        arrayList_LayerRecords = new ArrayList<LayerRecords>();
-        for (int i = 0; i < count_Layer; i++) {
-            LayerRecords lrecords = new LayerRecords();
-            lrecords.read(rafile, fheader);
-
-            arrayList_LayerRecords.add(i, lrecords);
-
-            System.out.println("Layer count: " + i);
-            System.out.println(lrecords.toString());
-            System.out.println();
-        }
-        return rafile.getFilePointer() - location;
-    }
-
-    private void readLayerInfoDataArray(RandomAccessFile rafile, FileHeader fheader, long length) throws IOException {
-        long space = length;
-
-        long length_lrecords = readLayerRecords(rafile, fheader);
-        space -= 2 + length_lrecords;
-
-        long length_cidata = readChanelImageData(rafile, fheader);
-        space -= length_cidata;
-        System.out.println("layer info channelimagedata read space:" + space);
-    }
-
-    private void readLayerInfoData(RandomAccessFile rafile, FileHeader fheader, long length) throws IOException {
-        //        if (length > 0) {
-        //            byte[] arr = new byte[(int) length];
-        //            rafile.read(arr);
-        //            readDataArray(arr, fheader);
-        //        }
-        readLayerInfoDataArray(rafile, fheader, length);
-    }
-
-    private long readLayerInfoDataLength(RandomAccessFile rafile, FileHeader fheader, long length) throws IOException {
-        //4.2.1 Layer Info Length
-        // Length of the layers info section, rounded up to a multiple of 2. (**PSB** length is 8 bytes.)
-        //        long length_ = 0;
-        long length_Data;
-        if (fheader.isFilePsb()) {
-            length_Data = rafile.readLong();
-            length += 8;
-        } else {
-            length_Data = rafile.readInt();
-            length += 4;
-        }
-        if (length_Data % 2 != 0) {
-            length_Data++;
-        }
-        return length_Data;
-    }
-
-    private long readLayerInfo(RandomAccessFile rafile, FileHeader fheader) throws IOException {
-        long location = rafile.getFilePointer();
-        long length_ = 0;
-        //4.2 Layer Info:?
-        // Layer info (see See Layer info for details).
-        long length_Data = readLayerInfoDataLength(rafile, fheader, length_);
-        readLayerInfoData(rafile, fheader, length_Data);
-        length_ += length_Data;
-        rafile.seek(location + length_);
-        return length_;
-    }
-
     private void readDataLength(RandomAccessFile rafile, FileHeader fheader) throws IOException {
-        //4.1 Layer and Mask Information Length 4
-        // Length of the layer and mask information section. (**PSB** length is 8 bytes.)
+        //4.1 Layer and Mask Information Length:4
+        //4,Length of the layer and mask information section. (**PSB** length is 8 bytes.)
+        long length;
         if (fheader.isFilePsb()) {
-            length_Data = rafile.readLong();
+            length = rafile.readLong();
             length_ += 8;
         } else {
-            length_Data = rafile.readInt();
+            length = rafile.readInt();
             length_ += 4;
+        }
+        setDataLength(length);
+        setLength(length_ + getDataLength());
+    }
+
+    private void readData(RandomAccessFile rafile, FileHeader fheader, long length) throws IOException {
+        if (length > 0) {
+            byte[] arr = new byte[(int) length];
+            rafile.read(arr);
+            setData(arr);
+            readDataArray(arr, fheader);
+        }
+    }
+
+    private void readDataArray(byte[] array, FileHeader fheader) throws IOException {
+        try {
+            DataInputStream dinstream = new DataInputStream(new ByteArrayInputStream(array));
+            //Layer Info:?
+            //Layer info (see See Layer info for details).
+            readLayerInfo(dinstream, fheader);
+            dinstream.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void readLayerInfo(DataInputStream dinstream, FileHeader fheader) throws IOException {
+        //Layer Info Length:4
+        //4,Length of the layers info section, rounded up to a multiple of 2. (**PSB** length is 8 bytes.)
+        long length;
+        long length_ = 0;
+        if (fheader.isFilePsb()) {
+            length = dinstream.readLong();
+            length_ += 8;
+        } else {
+            length = dinstream.readInt();
+            length_ += 4;
+        }
+        if (length % 2 != 0) {
+            length++;
+        }
+        setLayerInfoDataLength(length);
+        setLayerInfoLength(length_ + getLayerInfoDataLength());
+
+        long length_layerinfo = getLayerInfoDataLength();
+        byte[] arr = new byte[(int) length_layerinfo];
+        dinstream.read(arr);
+        setLayerInfoData(arr);
+        readLayerInfoDataArray(arr, fheader);
+    }
+
+    private void readLayerInfoDataArray(byte[] array, FileHeader fheader) {
+        try {
+            DataInputStream dinstream = new DataInputStream(new ByteArrayInputStream(array));
+            //Layer Count:2
+            //2,Layer count. If it is a negative number, its absolute value is the number of layers and the first alpha channel contains the transparency data for the merged result.
+            int count = dinstream.readShort();
+            setLayerCount(count);
+
+            //information:variable
+            //Variable,Information about each layer. See Layer records describes the structure of this information for each layer.
+            //Layer Records
+            arrayList_LayerRecords = new ArrayList<LayerRecords>();
+            for (int i = 0; i < count_Layer; i++) {
+                LayerRecords lrecords = new LayerRecords();
+                lrecords.read(dinstream, fheader);
+                arrayList_LayerRecords.add(i, lrecords);
+                System.out.println("Layer count: " + i);
+                System.out.println(lrecords.toString());
+                System.out.println();
+            }
+
+            //Channel image data:variable
+            //Variable,Channel image data. Contains one or more image data records (see See Channel image data for structure) for each layer. The layers are in the same order as in the layer information (previous row of this table).
+            count = 0;
+            for (Iterator<LayerRecords> it = arrayList_LayerRecords.iterator(); it.hasNext(); ) {
+                LayerRecords lrecords = it.next();
+                System.out.println("Layer count: " + count++);
+                ArrayList<ChannelInfo> arrayList_ChannelInfo = lrecords.getChannelInfoList();
+                for (Iterator<ChannelInfo> itr = arrayList_ChannelInfo.iterator(); itr.hasNext(); ) {
+                    ChannelInfo cinfo = itr.next();
+                    ChannelImageData cidata = new ChannelImageData();
+                    cidata.setDataLength(cinfo.getDataLength());
+                    cidata.read(dinstream, fheader, lrecords.getWidth(), lrecords.getHeight());
+                    cinfo.setData(cidata.getData());
+                    System.out.print("channel id: " + cinfo.getID());
+                    System.out.println("/" + cidata.toString());
+                }
+                System.out.println();
+            }
+            dinstream.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
