@@ -1,9 +1,6 @@
 package cn.imaginary.toolkit.image.photoshopdocument.layerandmask.additional;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
@@ -16,7 +13,8 @@ public class UnicodeLayerName {
     private long length_;
     private int length_Data;
 
-    public UnicodeLayerName() {}
+    public UnicodeLayerName() {
+    }
 
     public long getLength() {
         return length_;
@@ -93,15 +91,15 @@ public class UnicodeLayerName {
         length_ = length_Data;
     }
 
-    private void readData(byte[] array) {
-        if (length_Data > 0) {
-            setData(array);
-        }
-    }
-
     private void readDataLength(byte[] array) {
         if (null != array) {
             length_Data = array.length;
+        }
+    }
+
+    private void readData(byte[] array) {
+        if (length_Data > 0) {
+            setData(array);
         }
     }
 
