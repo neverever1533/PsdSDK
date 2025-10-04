@@ -5,8 +5,7 @@ import cn.imaginary.toolkit.image.photoshopdocument.FileHeader;
 import cn.imaginary.toolkit.image.photoshopdocument.ImageData;
 import cn.imaginary.toolkit.image.photoshopdocument.ImageResources;
 import cn.imaginary.toolkit.image.photoshopdocument.LayerAndMaskInfo;
-import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.LayerInfo;
-import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.LayerRecords;
+import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.LayerRecords;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -35,67 +34,39 @@ public class PsdUtils {
         read(file);
     }
 
-    private FileHeader readFileHeader(RandomAccessFile rafile) {
-        FileHeader fheader = new FileHeader();
-        fheader.read(rafile);
-        //        System.out.println(fheader.toString());
-        //        System.out.println();
-        return fheader;
-    }
-
-    private void readColorModeData(RandomAccessFile rafile, FileHeader fheader) {
-        ColorModeData cmdata = new ColorModeData();
-        cmdata.read(rafile, fheader.getColorMode());
-        //        System.out.println(cmdata.toString());
-        //        System.out.println();
-    }
-
-    private void readImageResources(RandomAccessFile rafile) {
-        ImageResources iresources = new ImageResources();
-        iresources.read(rafile);
-        //        System.out.println(iresources.toString());
-        //        System.out.println();
-    }
-
-    private void readLayerAndMaskInformation(RandomAccessFile rafile, FileHeader fileHeader) {
-        LayerAndMaskInfo laminfo = new LayerAndMaskInfo();
-        laminfo.read(rafile, fileHeader);
-        LayerInfo linfo = laminfo.getLayerInfo();
-        System.out.println(laminfo.toString());
-        System.out.println();
-        alist_Layers = linfo.getLayerRecordsArrayList();
-    }
-
-    private void readImageData(RandomAccessFile rafile, FileHeader fileHeader) {
-        ImageData idata = new ImageData();
-        idata.read(rafile, fileHeader);
-        data_imageData = idata.getImageData();
-        System.out.println(idata.toString());
-        System.out.println();
-    }
-
     public void read(RandomAccessFile rafile) {
         try {
-            System.out.println("start: " + rafile.getFilePointer());
+            System.out.println("fileheader start: " + rafile.getFilePointer());
+            FileHeader fheader = new FileHeader();
+            fheader.read(rafile);
+            System.out.println(fheader.toString());
+            System.out.println();
 
-            FileHeader fheader = readFileHeader(rafile);
+            System.out.println("colormodedata start: " + rafile.getFilePointer());
+            ColorModeData cmdata = new ColorModeData();
+            cmdata.read(rafile, fheader.getColorMode());
+            System.out.println(cmdata.toString());
+            System.out.println();
 
-            System.out.println("start: " + rafile.getFilePointer());
+            System.out.println("imageresources start: " + rafile.getFilePointer());
+            ImageResources iresources = new ImageResources();
+            iresources.read(rafile);
+            System.out.println(iresources.toString());
+            System.out.println();
 
-            readColorModeData(rafile, fheader);
+            System.out.println("layerandmaskinfo start: " + rafile.getFilePointer());
+            LayerAndMaskInfo laminfo = new LayerAndMaskInfo();
+            laminfo.read(rafile, fileHeader);
+            System.out.println(laminfo.toString());
+            System.out.println();
+            alist_Layers = laminfo.getLayerRecordsList();
 
-            System.out.println("start: " + rafile.getFilePointer());
-
-            readImageResources(rafile);
-
-            System.out.println("start: " + rafile.getFilePointer());
-
-            readLayerAndMaskInformation(rafile, fheader);
-
-            /*System.out.println("start: " + rafile.getFilePointer());
-
-            readImageData(rafile, fheader);
-            */
+            System.out.println("imagedata start: " + rafile.getFilePointer());
+            ImageData idata = new ImageData();
+            idata.read(rafile, fileHeader);
+            data_imageData = idata.getImageData();
+            System.out.println(idata.toString());
+            System.out.println();
 
             System.out.println("end: " + rafile.getFilePointer());
             System.out.println("File Length: " + rafile.length());
