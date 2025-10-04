@@ -2,13 +2,9 @@ package cn.imaginary.toolkit.image.photoshopdocument.layerandmask;
 
 import cn.imaginary.toolkit.image.photoshopdocument.FileHeader;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.additional.SectionDvider;
-import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.additional.UnicodeLayerName;
-import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.charset.Charset;
-import java.util.Arrays;
 
 public class AdditionalLayerInfo {
 
@@ -16,111 +12,146 @@ public class AdditionalLayerInfo {
     public static String Signature_8B64 = "8B64";
 
     public static String[] arr_Key = {
-        "lrFX",
-        "tySh",
-        "luni",
-        "lyid",
-        "lfx2",
-        "Patt",
-        "Pat2",
-        "Pat3",
-        "Anno",
-        "clbl",
-        "infx",
-        "knko",
-        "lspf",
-        "lclr",
-        "fxrp",
-        "grdm",
-        "lsct",
-        "brst",
-        "SoCo",
-        "PtFl",
-        "GdFl",
-        "vmsk",
-        "vsms",
-        "TySh",
-        "ffxi",
-        "lnsr",
-        "shpa",
-        "shmd",
-        "lyvr",
-        "tsly",
-        "lmgm",
-        "vmgm",
-        "brit",
-        "mixr",
-        "clrL",
-        "plLd",
-        "lnkD",
-        "lnk2",
-        "lnk3",
-        "phfl",
-        "blwh",
-        "CgEd",
-        "Txt2",
-        "vibA",
-        "pths",
-        "anFX",
-        "FMsk",
-        "SoLd",
-        "vstk",
-        "vscg",
-        "sn2P",
-        "vogk",
-        "PxSc",
-        "cinf",
-        "PxSD",
-        "artb",
-        "artd",
-        "abdd",
-        "SoLE",
-        "LMsk",
-        "expA",
-        "FXid",
-        "FEid",
+            "lrFX",
+            "tySh",
+            "luni",
+            "lyid",
+            "lfx2",
+            "Patt",
+            "Pat2",
+            "Pat3",
+            "Anno",
+            "clbl",
+            "infx",
+            "knko",
+            "lspf",
+            "lclr",
+            "fxrp",
+            "grdm",
+            "lsct",
+            "brst",
+            "SoCo",
+            "PtFl",
+            "GdFl",
+            "vmsk",
+            "vsms",
+            "TySh",
+            "ffxi",
+            "lnsr",
+            "shpa",
+            "shmd",
+            "lyvr",
+            "tsly",
+            "lmgm",
+            "vmgm",
+            "brit",
+            "mixr",
+            "clrL",
+            "plLd",
+            "lnkD",
+            "lnk2",
+            "lnk3",
+            "phfl",
+            "blwh",
+            "CgEd",
+            "Txt2",
+            "vibA",
+            "pths",
+            "anFX",
+            "FMsk",
+            "SoLd",
+            "vstk",
+            "vscg",
+            "sn2P",
+            "vogk",
+            "PxSc",
+            "cinf",
+            "PxSD",
+            "artb",
+            "artd",
+            "abdd",
+            "SoLE",
+            "LMsk",
+            "expA",
+            "FXid",
+            "FEid",
     };
 
     private byte[] arr_Data;
+    private byte[] arr_Name;
+
     private long length_;
     private long length_Data;
+
     private String key;
     private String signature;
-
-    private byte[] arr_Name;
 
     private Charset charset;
 
     private int layerType;
-
     private int layerType_Sub;
 
     //4.4 Additional Layer Information
-    public AdditionalLayerInfo() {}
+    public AdditionalLayerInfo() {
+    }
+
+
+    public void setSignature(String signature) throws IOException {
+        if (
+                null == signature ||
+                        (!signature.equalsIgnoreCase(Signature_8BIM) && !signature.equalsIgnoreCase(Signature_8B64))
+        ) {
+            throw new IOException("The Signature of the Additional Layer Information is wrong.");
+        } else {
+            this.signature = signature;
+        }
+    }
 
     public static boolean isSupportedKey(String key) {
         if (null != key) {
             for (int i = 0; i < arr_Key.length; i++) {
-                if (key.equalsIgnoreCase(arr_Key[i])) return true;
+                if (key.equalsIgnoreCase(arr_Key[i])) {
+                    return true;
+                }
             }
         }
         return false;
-    }
-
-    public void setData(byte[] array) {
-        arr_Data = array;
     }
 
     public byte[] getData() {
         return arr_Data;
     }
 
+    public void setData(byte[] array) {
+        arr_Data = array;
+    }
+
     public String getKey() {
         return key;
     }
 
+    public void setKey(String key) throws IOException {
+        if (isSupportedKey(key)) {
+            this.key = key;
+        } else {
+            throw new IOException("The key of the Additional Layer Information is wrong.");
+        }
+    }
+
     public long getLength() {
         return length_;
+    }
+
+    public void setLength(long length) {
+        length_ = length;
+    }
+
+    public long getDataLength() {
+        return length_Data;
+    }
+
+    public void setDataLength(long length) {
+        length_Data = length;
     }
 
     public String getName(String charsetName) {
@@ -140,12 +171,12 @@ public class AdditionalLayerInfo {
         setCharset(charset);
     }
 
-    private void setNameBytes(byte[] array) {
-        arr_Name = array;
-    }
-
     public byte[] getNameBytes() {
         return arr_Name;
+    }
+
+    private void setNameBytes(byte[] array) {
+        arr_Name = array;
     }
 
     public Charset getCharset() {
@@ -187,54 +218,18 @@ public class AdditionalLayerInfo {
         return SectionDvider.getSubLayerTypeName(layerType_Sub);
     }
 
-    public void read(RandomAccessFile rafile, FileHeader fheader) {
+    public void read(DataInputStream dinstream, FileHeader fheader) {
         try {
-            //4.4 Additional Layer Information: ?
-            long location = rafile.getFilePointer();
-
-            readSignature(rafile);
-            readKey(rafile);
-            readDataLength(rafile, fheader);
-            readData(rafile, key);
-
-            length_ += length_Data;
-            //            System.out.println("additional layer info space: " + (location + length_ - rafile.getFilePointer()));
-            rafile.seek(location + getLength());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void readData(RandomAccessFile rafile, String key) throws IOException {
-        //4.4.4 Data：?
-        // Data (See individual sections)
-        if (length_Data > 0) {
-            byte[] arr = new byte[(int) length_Data];
-            rafile.read(arr);
-            setData(arr);
-        }
-    }
-
-    private void readDataLength(RandomAccessFile rafile, FileHeader fheader) throws IOException {
-        //4.4.3 Data below Length：4
-        //Length data below, rounded up to an even byte count.
-        // (**PSB**, the following keys have a length count of 8 bytes: LMsk, Lr16, Lr32, Layr, Mt16, Mt32, Mtrn, Alph, FMsk, lnk2, FEid, FXid, PxSD.
-        if (fheader.isFilePsb()) {
-            length_Data = rafile.readLong();
-            length_ += 8;
-        } else {
-            length_Data = rafile.readInt();
+            //Signature：4
+            //4,Signature: '8BIM' or '8B64'
+            byte[] arr = new byte[4];
+            dinstream.read(arr);
             length_ += 4;
-        }
-        if (length_Data % 2 != 0) {
-            length_Data++;
-        }
-    }
+            setSignature(new String(arr));
 
-    private void readKey(RandomAccessFile rafile) throws IOException {
-        //4.4.2 Key：4
-        //Key: a 4-character code (See individual sections)
-        /*
+            //4.4.2 Key：4
+            //Key: a 4-character code (See individual sections)
+            /*
     lrFX:Effects Layer info;
     tySh:Type Tool info;
     luni:Unicode layer name;
@@ -291,27 +286,49 @@ public class AdditionalLayerInfo {
     expA:Exposure;
     FXid or FEid:Filter Effects;
     */
-        byte[] arr = new byte[4];
-        rafile.read(arr);
-        length_ += 4;
-        String key = new String(arr);
-        if (isSupportedKey(key)) {
-            this.key = key;
-        } else {
-            throw new IOException("The key of the Additional Layer Information is wrong.");
+            arr = new byte[4];
+            dinstream.read(arr);
+            length_ += 4;
+            setKey(new String(arr));
+
+            readDataLength(dinstream, fheader);
+            readData(dinstream, getDataLength());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    private void readSignature(RandomAccessFile rafile) throws IOException {
-        //4.4.1 Signature：4
-        // Signature: '8BIM' or '8B64'
-        byte[] arr = new byte[4];
-        rafile.read(arr);
-        length_ += 4;
-        signature = new String(arr);
-        if (signature.equalsIgnoreCase(Signature_8BIM) || signature.equalsIgnoreCase(Signature_8B64)) {} else {
-            throw new IOException("The Signature of the Additional Layer Information is wrong.");
+    private void readDataLength(DataInputStream dinstream, FileHeader fheader) throws IOException {
+        //4.4.3 Data below Length：4
+        //Length data below, rounded up to an even byte count.
+        // (**PSB**, the following keys have a length count of 8 bytes: LMsk, Lr16, Lr32, Layr, Mt16, Mt32, Mtrn, Alph, FMsk, lnk2, FEid, FXid, PxSD.
+        long length;
+        if (fheader.isFilePsb()) {
+            length = dinstream.readLong();
+            length_ += 8;
+        } else {
+            length = dinstream.readInt();
+            length_ += 4;
         }
+        if (length % 2 != 0) {
+            length++;
+        }
+        setDataLength(length);
+        setLength(length_ + getDataLength());
+    }
+
+    private void readData(DataInputStream dinstream, long length) throws IOException {
+        //4.4.4 Data：?
+        // Data (See individual sections)
+        if (length > 0) {
+            byte[] arr = new byte[(int) length];
+            dinstream.read(arr);
+            setData(arr);
+            readDataArray(arr, getKey());
+        }
+    }
+
+    private void readDataArray(byte[] array, String key) {
     }
 
     public String toString() {
