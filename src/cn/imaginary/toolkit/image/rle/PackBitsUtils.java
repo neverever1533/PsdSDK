@@ -12,6 +12,9 @@ public class PackBitsUtils {
     }
 
     private byte[] getDataRleCompressed(byte[] array) {
+        if (null == array) {
+            return array;
+        }
         ArrayList<Byte> alist = new ArrayList<Byte>();
         byte len = 0;
         byte b;
@@ -32,6 +35,9 @@ public class PackBitsUtils {
     }
 
     public byte[] getDataCompressed(byte[] array) {
+        if (null == array) {
+            return array;
+        }
         byte[] arr = getDataRleCompressed(array);
         ArrayList<Byte> alist = new ArrayList<Byte>();
         byte len = 0;
@@ -60,6 +66,9 @@ public class PackBitsUtils {
     }
 
     public byte[] getDataDecompressed(byte[] array) {
+        if (null == array) {
+            return array;
+        }
         ArrayList<Byte> alist = new ArrayList<Byte>();
         int index = 0;
         byte len = 0;
