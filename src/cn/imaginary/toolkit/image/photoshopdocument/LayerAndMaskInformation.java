@@ -28,8 +28,7 @@ public class LayerAndMaskInfo {
     private byte[] arr_Data_LayerInfo;
 
     //4 Layer and Mask Information
-    public LayerAndMaskInfo() {
-    }
+    public LayerAndMaskInfo() {}
 
     public long getLength() {
         return length_;
@@ -188,21 +187,26 @@ public class LayerAndMaskInfo {
 
             //Channel image data:variable
             //Variable,Channel image data. Contains one or more image data records (see See Channel image data for structure) for each layer. The layers are in the same order as in the layer information (previous row of this table).
-            count = 0;
-            for (Iterator<LayerRecords> it = arrayList_LayerRecords.iterator(); it.hasNext(); ) {
+            for (Iterator<LayerRecords> it = arrayList_LayerRecords.iterator(); it.hasNext();) {
                 LayerRecords lrecords = it.next();
-                System.out.println("Layer count: " + count++);
+                byte[][][] arrays_data_image =
+                    new byte[lrecords.getChannels()][lrecords.getHeight()][lrecords.getWidth()];
                 ArrayList<ChannelInfo> arrayList_ChannelInfo = lrecords.getChannelInfoList();
-                for (Iterator<ChannelInfo> itr = arrayList_ChannelInfo.iterator(); itr.hasNext(); ) {
+                for (Iterator<ChannelInfo> itr = arrayList_ChannelInfo.iterator(); itr.hasNext();) {
                     ChannelInfo cinfo = itr.next();
+                    int id = cinfo.getID();
                     ChannelImageData cidata = new ChannelImageData();
-                    cidata.setDataLength(cinfo.getDataLength());
-                    cidata.read(dinstream, fheader, lrecords.getWidth(), lrecords.getHeight());
-                    cinfo.setData(cidata.getData());
+                    cidata.read(dinstream, cinfo.getDataLength(), fheader, lrecords.getWidth(), lrecords.getHeight());
+                    if (id < 0) {
+                        arrays_data_image[2 - id] = cidata.getImageData();
+                    } else {
+                        arrays_data_image[id] = cidata.getImageData();
+                    }
                     System.out.print("channel id: " + cinfo.getID());
                     System.out.println("/" + cidata.toString());
                 }
                 System.out.println();
+                lrecords.setImageData(arrays_data_image);
             }
             dinstream.close();
         } catch (IOException e) {
