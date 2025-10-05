@@ -1,28 +1,29 @@
 package cn.imaginary.toolkit.image.photoshopdocument;
 
+import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelImageData;
 import cn.imaginary.toolkit.image.rle.PackBitsUtils;
-// import java.awt.image.BufferedImage;
-// import java.awt.image.DataBufferInt;
-import java.io.File;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.ArrayList;
-
-// import javax.imageio.ImageIO;
 
 public class ImageData {
 
-    public static String[] arr_Compression_Method = { "Raw", "RLE", "ZIP", "ZIP_Prediction" };
+    public static String[] arr_Name_Compression = { "Raw", "RLE", "ZIP", "ZIP_Prediction" };
 
-    private int compression;
-    private int Raw_Data = 0;
-    private int RLE_Compressed = 1;
-    private int ZIP_Without_Prediction = 2;
-    private int ZIP_With_Prediction = 3;
+    public int compression;
+
+    public static int Raw = 0;
+    public static int RLE = 1;
+    public static int ZIP = 2;
+    public static int ZIP_Prediction = 3;
 
     private long length_;
     private long length_Data;
-    private byte[] arr_ImageData;
+
+    private byte[] arr_Data;
+
+    private byte[][][] arrays_Data_Image;
 
     public ImageData() {}
 
@@ -30,81 +31,179 @@ public class ImageData {
         return compression;
     }
 
+    public void setCompression(int compression) throws IOException {
+        switch (compression) {
+            case 0:
+                this.compression = Raw;
+                break;
+            case 1:
+                this.compression = RLE;
+                break;
+            case 2:
+                this.compression = ZIP;
+                break;
+            case 3:
+                this.compression = ZIP_Prediction;
+                break;
+            default:
+                throw new IOException("The Compression Method of the Image Data is wrong.");
+        }
+    }
+
     public String getCompressionMethodName() {
-        return arr_Compression_Method[compression];
+        return arr_Name_Compression[compression];
     }
 
     public long getLength() {
         return length_;
     }
 
-    public byte[] getImageData() {
-        return arr_ImageData;
+    public void setLength(long length) {
+        length_ = length;
     }
 
-    private void readCompression(RandomAccessFile rafile) throws IOException {
-        //5.1 Compression Method:2
-        // Compression method:
-        // 0 = Raw image data
-        // 1 = RLE compressed the image data starts with the byte counts for all the scan lines (rows * channels), with each count stored as a two-byte value. The RLE compressed data follows, with each scan line compressed separately. The RLE compression is the same compression algorithm used by the Macintosh ROM routine PackBits , and the TIFF standard.
-        // 2 = ZIP without prediction
-        // 3 = ZIP with prediction.
-        compression = rafile.readShort();
-        length_ += 2;
+    public long getDataLength() {
+        return length_Data;
     }
 
-    private void readDataLength(RandomAccessFile rafile) throws IOException {
-        length_Data = rafile.length() - rafile.getFilePointer();
+    public void setDataLength(long length) {
+        length_Data = length;
+    }
+
+    public byte[] getData() {
+        return arr_Data;
+    }
+
+    public void setData(byte[] array) {
+        arr_Data = array;
+    }
+
+    public byte[][][] getImageData() {
+        return arrays_Data_Image;
+    }
+
+    public void setImageData(byte[][][] arrays) {
+        arrays_Data_Image = arrays;
     }
 
     public void read(RandomAccessFile rafile, FileHeader fheader) {
         try {
-            long location = rafile.getFilePointer();
-            readCompression(rafile);
-            readDataLength(rafile);
-            readData(rafile, fheader);
-            length_ += length_Data;
-            rafile.seek(location + getLength());
+            setLength(rafile.length() - rafile.getFilePointer());
+
+            //5.1 Compression Method:2
+            // Compression method:
+            // 0 = Raw image data
+            // 1 = RLE compressed the image data starts with the byte counts for all the scan lines (rows * channels), with each count stored as a two-byte value. The RLE compressed data follows, with each scan line compressed separately. The RLE compression is the same compression algorithm used by the Macintosh ROM routine PackBits , and the TIFF standard.
+            // 2 = ZIP without prediction
+            // 3 = ZIP with prediction.
+            setCompression(rafile.readShort());
+
+            setDataLength(getLength() - 2);
+
+            readData(rafile, fheader, getDataLength());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void readData(RandomAccessFile rafile, FileHeader fheader) throws IOException {
+    private void readData(RandomAccessFile rafile, FileHeader fheader, long length) throws IOException {
+        if (length > 0) {
+            byte[] arr = new byte[(int) length];
+            rafile.read(arr);
+            setData(arr);
+            readDataArray(arr, fheader);
+        }
+    }
+
+    private void readDataArray(byte[] array, FileHeader fheader) throws IOException {
+        try {
+            DataInputStream dinstream = new DataInputStream(new ByteArrayInputStream(array));
+            readImageData(dinstream, fheader);
+            dinstream.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void readImageData(DataInputStream dinstream, FileHeader fheader) throws IOException {
+        int channels = fheader.getChannels();
+        int width = fheader.getWidth();
+        int height = fheader.getHeight();
         //5.2 Image Data：?
         // The image data. Planar order = RRR GGG BBB, etc.
+        int compression = getCompression();
         switch (compression) {
             case 0:
-                imageDataRaw(rafile, fheader);
+                readImageDataRaw(dinstream, channels, width, height);
                 break;
             case 1:
-                imageDataRLE(rafile, fheader);
+                readImageDataRLE(dinstream, fheader, channels, width, height);
                 break;
             case 2:
-                imageDataZip(rafile, fheader);
+                readImageDataZip(dinstream, fheader, channels, width, height);
                 break;
             case 3:
-                imageDataZipPrediction(rafile, fheader);
+                readImageDataZipPrediction(dinstream, fheader, channels, width, height);
                 break;
             default:
                 throw new IOException("The Compression Method of the Image Data is wrong.");
         }
-        System.out.println("5.location_ImageData: " + rafile.getFilePointer());
     }
 
-    private void imageDataRaw(RandomAccessFile rafile, FileHeader fheader) {
-        //0 = Raw
+    private void readImageDataRaw(DataInputStream dinstream, int channels, int width, int height) throws IOException {
+        byte[] arr;
+        byte[][][] arrays_data_image = new byte[channels][height][width];
+        for (int i = 0; i < channels; i++) {
+            for (int j = 0; j < height; j++) {
+                arr = new byte[width];
+                dinstream.read(arr);
+                arrays_data_image[i][j] = arr;
+            }
+        }
+        setImageData(arrays_data_image);
     }
 
-    private void imageDataRLE(RandomAccessFile rafile, FileHeader fheader) {
-        //1 = RLE compressed
+    private void readImageDataRLE(DataInputStream dinstream, FileHeader fheader, int channels, int width, int height)
+        throws IOException {
+        int[] arr_ScanLine = new int[height * channels];
+        int count;
+        for (int i = 0; i < arr_ScanLine.length; i++) {
+            if (!fheader.isFilePsb()) {
+                count = dinstream.readShort();
+            } else {
+                count = dinstream.readInt();
+            }
+            arr_ScanLine[i] = count;
+        }
+
+        int index;
+        byte[] arr;
+        PackBitsUtils pbutils = new PackBitsUtils();
+        byte[][][] arrays_data_image = new byte[channels][height][width];
+        for (int i = 0; i < channels; i++) {
+            for (int j = 0; j < height; j++) {
+                index = height * i + j;
+                count = arr_ScanLine[index];
+                arr = new byte[count];
+                dinstream.read(arr);
+                arr = pbutils.getDataDecompressed(arr);
+                arrays_data_image[i][j] = arr;
+            }
+        }
+        setImageData(arrays_data_image);
     }
 
-    private void imageDataZip(RandomAccessFile rafile, FileHeader fheader) {
+    private void readImageDataZip(DataInputStream rafile, FileHeader fheader, int channels, int width, int height) {
         //2 = ZIP without prediction
     }
 
-    private void imageDataZipPrediction(RandomAccessFile rafile, FileHeader fheader) {
+    private void readImageDataZipPrediction(
+        DataInputStream rafile,
+        FileHeader fheader,
+        int channels,
+        int width,
+        int height
+    ) {
         //3 = ZIP with prediction.
     }
 
