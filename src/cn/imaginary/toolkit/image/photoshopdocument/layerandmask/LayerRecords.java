@@ -11,39 +11,40 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class LayerRecords {
 
     public static String Signature_8BIM = "8BIM";
     public static String[] arr_key_BlendMode = {
-            "pass",
-            "norm",
-            "diss",
-            "dark",
-            "mul ",
-            "idiv",
-            "lbrn",
-            "dkCl",
-            "lite",
-            "scrn",
-            "div ",
-            "lddg",
-            "lgCl",
-            "over",
-            "sLit",
-            "hLit",
-            "vLit",
-            "lLit",
-            "pLit",
-            "hMix",
-            "diff",
-            "smud",
-            "fsub",
-            "fdiv",
-            "hue ",
-            "sat ",
-            "colr",
-            "lum ",
+        "pass",
+        "norm",
+        "diss",
+        "dark",
+        "mul ",
+        "idiv",
+        "lbrn",
+        "dkCl",
+        "lite",
+        "scrn",
+        "div ",
+        "lddg",
+        "lgCl",
+        "over",
+        "sLit",
+        "hLit",
+        "vLit",
+        "lLit",
+        "pLit",
+        "hMix",
+        "diff",
+        "smud",
+        "fsub",
+        "fdiv",
+        "hue ",
+        "sat ",
+        "colr",
+        "lum ",
     };
 
     private ArrayList<ChannelInfo> arrayList_ChannelInfo;
@@ -85,8 +86,9 @@ public class LayerRecords {
 
     private byte[] arr_Data_Extra;
 
-    public LayerRecords() {
-    }
+    private byte[][][] arrays_Data_Image;
+
+    public LayerRecords() {}
 
     public long getLength() {
         return length_;
@@ -110,6 +112,14 @@ public class LayerRecords {
 
     public void setExtraData(byte[] array) {
         arr_Data_Extra = array;
+    }
+
+    public byte[][][] getImageData() {
+        return arrays_Data_Image;
+    }
+
+    public void setImageData(byte[][][] arrays) {
+        arrays_Data_Image = arrays;
     }
 
     public int getTop() {
@@ -380,9 +390,9 @@ public class LayerRecords {
         for (int j = 0; j < channels; j++) {
             ChannelInfo cinfo = new ChannelInfo();
             cinfo.read(dinstream, fheader);
-            arrayList_ChannelInfo.add(j, cinfo);
+            arrayList_ChannelInfo.add(cinfo);
+            System.out.println(cinfo.toString());
             length_ += cinfo.getLength();
-            //            System.out.println(cinfo.toString());
         }
 
         //Blend Mode Signature:4
@@ -509,8 +519,8 @@ public class LayerRecords {
             signature = new String(arr);
             dinstream.reset();
             if (
-                    signature.equalsIgnoreCase(AdditionalLayerInfo.Signature_8BIM) ||
-                            signature.equalsIgnoreCase(AdditionalLayerInfo.Signature_8B64)
+                signature.equalsIgnoreCase(AdditionalLayerInfo.Signature_8BIM) ||
+                signature.equalsIgnoreCase(AdditionalLayerInfo.Signature_8B64)
             ) {
                 AdditionalLayerInfo alinfo = new AdditionalLayerInfo();
                 alinfo.read(dinstream, fheader);
@@ -570,7 +580,7 @@ public class LayerRecords {
         sbuilder.append("/Sub Layer Type: " + getSubLayerType());
         sbuilder.append("/Sun Layer Type Name: " + getSubLayerTypeName());
         sbuilder.append("/arr Name length: " + getNameBytes().length);
-//        sbuilder.append("/Layer Name: " + getName("gbk"));
+        //        sbuilder.append("/Layer Name: " + getName("gbk"));
         sbuilder.append("/Layer Name: " + getName(getCharset()));
         return sbuilder.toString();
     }
