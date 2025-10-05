@@ -18,9 +18,11 @@ public class ChannelInfo {
     private long length_;
     private long length_Data;
     private byte[] arr_Data;
+    private byte[][] arrs_Data_Image;
 
     //4.2.3.3 Channel Info ?
-    public ChannelInfo() {}
+    public ChannelInfo() {
+    }
 
     public byte[] getData() {
         return arr_Data;
@@ -28,6 +30,14 @@ public class ChannelInfo {
 
     public void setData(byte[] array) {
         arr_Data = array;
+    }
+
+    public byte[][] getImageData() {
+        return arrs_Data_Image;
+    }
+
+    public void setImageData(byte[][] array) {
+        arrs_Data_Image = array;
     }
 
     public long getDataLength() {
