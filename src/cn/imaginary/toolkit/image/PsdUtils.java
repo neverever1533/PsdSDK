@@ -14,9 +14,22 @@ import java.util.ArrayList;
 public class PsdUtils {
 
     private ArrayList<LayerRecords> alist_Layers;
-    private byte[] data_imageData;
+    private ImageData idata;
+    private FileHeader fheader;
 
     public PsdUtils() {}
+
+    public FileHeader getFileHeader() {
+        return fheader;
+    }
+
+    public ImageData getImageData() {
+        return idata;
+    }
+
+    public ArrayList<LayerRecords> getLayers() {
+        return alist_Layers;
+    }
 
     public void read(File file) {
         RandomAccessFile rafile = null;
@@ -37,7 +50,7 @@ public class PsdUtils {
     public void read(RandomAccessFile rafile) {
         try {
             System.out.println("fileheader start: " + rafile.getFilePointer());
-            FileHeader fheader = new FileHeader();
+            fheader = new FileHeader();
             fheader.read(rafile);
             System.out.println(fheader.toString());
             System.out.println();
@@ -56,15 +69,14 @@ public class PsdUtils {
 
             System.out.println("layerandmaskinfo start: " + rafile.getFilePointer());
             LayerAndMaskInfo laminfo = new LayerAndMaskInfo();
-            laminfo.read(rafile, fileHeader);
+            laminfo.read(rafile, fheader);
             System.out.println(laminfo.toString());
             System.out.println();
             alist_Layers = laminfo.getLayerRecordsList();
 
             System.out.println("imagedata start: " + rafile.getFilePointer());
-            ImageData idata = new ImageData();
-            idata.read(rafile, fileHeader);
-            data_imageData = idata.getImageData();
+            idata = new ImageData();
+            idata.read(rafile, fheader);
             System.out.println(idata.toString());
             System.out.println();
 
@@ -73,13 +85,5 @@ public class PsdUtils {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public byte[] getImageData() {
-        return data_imageData;
-    }
-
-    public ArrayList<LayerRecords> getLayers() {
-        return alist_Layers;
     }
 }
