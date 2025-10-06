@@ -18,7 +18,7 @@ public class FileHeader {
 
     private String signature;
 
-    private String[] arr_Version = {"Unknown", "PSD", "PSB"};
+    private String[] arr_Version = { "Unknown", "PSD", "PSB" };
 
     private int channels;
     private int channels_Min = 1;
@@ -39,8 +39,7 @@ public class FileHeader {
     private byte[] arr_Reserved = new byte[6];
 
     //1 FileHeader:26
-    public FileHeader() {
-    }
+    public FileHeader() {}
 
     public String getSignature() {
         return signature;
@@ -71,7 +70,7 @@ public class FileHeader {
     }
 
     public boolean isFilePsb() {
-        return version == 2;
+        return version == Version_PSB;
     }
 
     public int getChannels() {
@@ -160,6 +159,23 @@ public class FileHeader {
         this.reserved = reserved;
     }
 
+    public byte[] getReservedData() {
+        return arr_Reserved;
+    }
+
+    public void setReservedData(byte[] array) throws IOException {
+        if (null == array) {
+            throw new IOException("The reserved of the FileHeader is wrong.");
+        }
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] != 0) {
+                throw new IOException("The reserved of the FileHeader is wrong.");
+            }
+        }
+        arr_Reserved = array;
+        setReserved(0);
+    }
+
     public int getLength() {
         return length_;
     }
@@ -224,7 +240,7 @@ public class FileHeader {
         //6,Reserved: must be zero.
         arr = new byte[6];
         dinstream.read(arr);
-        setReserved(0);
+        setReservedData(arr);
 
         //1.4 Channels:2
         //2,The number of channels in the image, including any alpha channels. Supported range is 1 to 56.
