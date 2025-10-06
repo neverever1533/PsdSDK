@@ -4,6 +4,7 @@ import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.GlobalLayerMask
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.LayerRecords;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelImageData;
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.layer.ChannelInfo;
+
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -20,15 +21,18 @@ public class LayerAndMaskInfo {
     private long length_LayerInfo;
     private long length_Data_LayerInfo;
 
+
     private ArrayList<LayerRecords> arrayList_LayerRecords;
 
+    private int length_MaskInfo;
     private int count_Layer;
 
     private byte[] arr_Data;
     private byte[] arr_Data_LayerInfo;
 
     //4 Layer and Mask Information
-    public LayerAndMaskInfo() {}
+    public LayerAndMaskInfo() {
+    }
 
     public long getLength() {
         return length_;
@@ -50,12 +54,12 @@ public class LayerAndMaskInfo {
         return arr_Data;
     }
 
-    public void setData(byte[] array) {
-        arr_Data = array;
-    }
-
     public byte[] getLayerInfoData() {
         return arr_Data_LayerInfo;
+    }
+
+    public void setData(byte[] array) {
+        arr_Data = array;
     }
 
     public void setLayerInfoData(byte[] array) {
@@ -76,6 +80,14 @@ public class LayerAndMaskInfo {
 
     public void setLayerInfoDataLength(long length) {
         length_Data_LayerInfo = length;
+    }
+
+    public void setMaskInfoLength(int length) {
+        length_MaskInfo = length;
+    }
+
+    public int getMaskInfoLength() {
+        return length_MaskInfo;
     }
 
     public int getLayerCount() {
@@ -133,6 +145,10 @@ public class LayerAndMaskInfo {
             //Layer Info:?
             //Layer info (see See Layer info for details).
             readLayerInfo(dinstream, fheader);
+
+            //Global layer mask info
+            //Variable,Global layer mask info (see See Global layer mask info for details).
+            readMaskInfo(dinstream);
             dinstream.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -187,12 +203,12 @@ public class LayerAndMaskInfo {
 
             //Channel image data:variable
             //Variable,Channel image data. Contains one or more image data records (see See Channel image data for structure) for each layer. The layers are in the same order as in the layer information (previous row of this table).
-            for (Iterator<LayerRecords> it = arrayList_LayerRecords.iterator(); it.hasNext();) {
+            for (Iterator<LayerRecords> it = arrayList_LayerRecords.iterator(); it.hasNext(); ) {
                 LayerRecords lrecords = it.next();
                 byte[][][] arrays_data_image =
-                    new byte[lrecords.getChannels()][lrecords.getHeight()][lrecords.getWidth()];
+                        new byte[lrecords.getChannels()][lrecords.getHeight()][lrecords.getWidth()];
                 ArrayList<ChannelInfo> arrayList_ChannelInfo = lrecords.getChannelInfoList();
-                for (Iterator<ChannelInfo> itr = arrayList_ChannelInfo.iterator(); itr.hasNext();) {
+                for (Iterator<ChannelInfo> itr = arrayList_ChannelInfo.iterator(); itr.hasNext(); ) {
                     ChannelInfo cinfo = itr.next();
                     int id = cinfo.getID();
                     ChannelImageData cidata = new ChannelImageData();
@@ -212,6 +228,16 @@ public class LayerAndMaskInfo {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void readMaskInfo(DataInputStream dinstream) {
+        //4.3 Global Layer Mask Info:Variable
+        // Variable,Global layer mask info (see See Global layer mask info for details).
+        glminfo = new GlobalLayerMaskInfo();
+        glminfo.read(dinstream);
+        System.out.println(glminfo.toString());
+        System.out.println();
+        setMaskInfoLength(glminfo.getLength());
     }
 
     public String toString() {
