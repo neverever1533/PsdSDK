@@ -18,10 +18,10 @@ public class GlobalLayerMaskInfo {
     private int filler;
 
     private byte[] arr_Data;
+    private byte[] arr_Filler;
 
     //Global Layer Mask Info
-    public GlobalLayerMaskInfo() {
-    }
+    public GlobalLayerMaskInfo() {}
 
     public int getDataLength() {
         return length_Data;
@@ -107,7 +107,18 @@ public class GlobalLayerMaskInfo {
         return filler;
     }
 
-    public void setFiller(byte[] array) throws IOException {
+    public void setFiller(int filler) throws IOException {
+        if (filler != 0) {
+            throw new IOException("The filler of the GlobalLayerMaskInfo is wrong.");
+        }
+        this.filler = filler;
+    }
+
+    public byte[] getFillerData() {
+        return arr_Filler;
+    }
+
+    public void setFillerData(byte[] array) throws IOException {
         if (null == array) {
             throw new IOException("The filler of the GlobalLayerMaskInfo is wrong.");
         }
@@ -116,7 +127,8 @@ public class GlobalLayerMaskInfo {
                 throw new IOException("The filler of the GlobalLayerMaskInfo is wrong.");
             }
         }
-        filler = 0;
+        arr_Filler = array;
+        setFiller(0);
     }
 
     public void read(DataInputStream dinstream) {
@@ -171,7 +183,7 @@ public class GlobalLayerMaskInfo {
             if (length_Filler > 0) {
                 byte[] arr = new byte[length_Filler];
                 dinstream.read(arr);
-                setFiller(arr);
+                setFillerData(arr);
             }
             dinstream.close();
         } catch (IOException e) {
