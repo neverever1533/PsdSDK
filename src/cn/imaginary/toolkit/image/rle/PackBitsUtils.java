@@ -1,10 +1,6 @@
 package cn.imaginary.toolkit.image.rle;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 import java.util.ArrayList;
-
-import javaev.util.ArrayListUtils;
 
 public class PackBitsUtils {
 
@@ -13,7 +9,7 @@ public class PackBitsUtils {
 
     private byte[] getDataRleCompressed(byte[] array) {
         if (null == array) {
-            return array;
+            return null;
         }
         ArrayList<Byte> alist = new ArrayList<Byte>();
         byte len = 0;
@@ -30,13 +26,12 @@ public class PackBitsUtils {
             }
             alist.add(b);
         }
-        byte[] arr = new byte[alist.size()];
-        return ArrayListUtils.toArray(alist, arr);
+        return toArray(alist);
     }
 
     public byte[] getDataCompressed(byte[] array) {
         if (null == array) {
-            return array;
+            return null;
         }
         byte[] arr = getDataRleCompressed(array);
         ArrayList<Byte> alist = new ArrayList<Byte>();
@@ -61,19 +56,18 @@ public class PackBitsUtils {
                 alist.add(0, b);
             }
         }
-        arr = new byte[alist.size()];
-        return ArrayListUtils.toArray(alist, arr);
+        return toArray(alist);
     }
 
     public byte[] getDataDecompressed(byte[] array) {
         if (null == array) {
-            return array;
+            return null;
         }
+        int length = array.length;
         ArrayList<Byte> alist = new ArrayList<Byte>();
         int index = 0;
         byte len = 0;
         byte b;
-        int length = array.length;
         while (index < length) {
             len = array[index++];
             // if (len <= 0 && len > -128) {
@@ -91,7 +85,23 @@ public class PackBitsUtils {
                 index += len + 1;
             }
         }
-        byte[] arr = new byte[alist.size()];
-        return ArrayListUtils.toArray(alist, arr);
+        return toArray(alist);
+    }
+
+    private byte[] toArray(ArrayList<Byte> arrayList) {
+        return toArray(arrayList, null);
+    }
+
+    private byte[] toArray(ArrayList<Byte> arrayList, byte[] array) {
+        if (null == arrayList) {
+            return null;
+        }
+        if (null == array) {
+            array = new byte[arrayList.size()];
+        }
+        for (int i = 0; i < array.length; i++) {
+            array[i] = arrayList.get(i);
+        }
+        return array;
     }
 }
