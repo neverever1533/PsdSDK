@@ -44,7 +44,8 @@ import cn.imaginary.toolkit.image.PsdUtils;
     ...
     PsdUtils psdUtils = new PsdUtils();
     String psdFilePath = "xx.psd";
-    psdUtils.read(psdFilePath);
+    File psdFile = new File(psdFilePath);
+    psdUtils.read(psdFile);
 ```
 - _Layers_ :
 ```java
@@ -56,13 +57,17 @@ import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.LayerRecords;
 - _pixels_ :
 ```java
     byte[][][] pixels = layerRecords.getImageData();
-    String pngPath = "xx.png";
-    exportImage(pngPath, pixels, layerRecords.getWidth(), layerRecords.getHeight());
+    File dirFile = psdFile.getParentFile();
+    String name = lrecords.getName(lrecords.getCharset());
+    name += ".png";
+    exportImage(new File(dirFile, name), pixels, layerRecords.getWidth(), layerRecords.getHeight());
 ```
 - _ImageData_ :
 ```java
     ...
-    exportImage(pngPath, imageData.getImageData(), fileHeader.getWidth(), fileHeader.getHeight());
+    name = psdFile.getName();
+    name += ".png";
+    exportImage(new File(dirFile, name), imageData.getImageData(), fileHeader.getWidth(), fileHeader.getHeight());
 ```
 - _BufferedImage_ :
 ```java
@@ -80,7 +85,7 @@ import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.LayerRecords;
             ...
         }
     }
-    ImageIO.write(bufferedImage, "png", new File(pngPath));
+    ImageIO.write(bufferedImage, "png", pngFile);
 ```
 
 ## 许可（License）：
