@@ -2,14 +2,15 @@ package cn.imaginary.toolkit.image.rle;
 
 import java.util.ArrayList;
 
-import javaev.util.ArrayListUtils;
-
 public class RunLengthEncodingUtils {
 
     public RunLengthEncodingUtils() {
     }
 
     public byte[] getDataRleCompressed(byte[] array) {
+        if (null == array) {
+            return null;
+        }
         ArrayList<Byte> alist = new ArrayList<Byte>();
         byte len = 0;
         byte b;
@@ -24,11 +25,13 @@ public class RunLengthEncodingUtils {
             }
             alist.add(b);
         }
-        byte[] arr = new byte[alist.size()];
-        return ArrayListUtils.toArray(alist, arr);
+        return toArray(alist);
     }
 
     public byte[] getDataRleDecompressed(byte[] array) {
+        if (null == array) {
+            return null;
+        }
         ArrayList<Byte> alist = new ArrayList<Byte>();
         int index = 0;
         byte len = 0;
@@ -43,7 +46,23 @@ public class RunLengthEncodingUtils {
                 }
             }
         }
-        byte[] arr = new byte[alist.size()];
-        return ArrayListUtils.toArray(alist, arr);
+        return toArray(alist);
+    }
+
+    private byte[] toArray(ArrayList<Byte> arrayList) {
+        return toArray(arrayList, null);
+    }
+
+    private byte[] toArray(ArrayList<Byte> arrayList, byte[] array) {
+        if (null == arrayList) {
+            return null;
+        }
+        if (null == array) {
+            array = new byte[arrayList.size()];
+        }
+        for (int i = 0; i < array.length; i++) {
+            array[i] = arrayList.get(i);
+        }
+        return array;
     }
 }
