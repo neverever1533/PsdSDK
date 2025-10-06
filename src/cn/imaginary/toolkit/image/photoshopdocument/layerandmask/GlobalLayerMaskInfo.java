@@ -3,7 +3,6 @@ package cn.imaginary.toolkit.image.photoshopdocument.layerandmask;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 
 public class GlobalLayerMaskInfo {
 
@@ -17,122 +16,174 @@ public class GlobalLayerMaskInfo {
     private int opacity;
     private int kind;
     private int filler;
-    private int length_Filler;
 
-    //4.3 Global Layer Mask Info
-    public GlobalLayerMaskInfo() {}
+    private byte[] arr_Data;
+
+    //Global Layer Mask Info
+    public GlobalLayerMaskInfo() {
+    }
+
+    public int getDataLength() {
+        return length_Data;
+    }
+
+    public void setDataLength(int length) {
+        length_Data = length;
+    }
 
     public int getLength() {
         return length_;
+    }
+
+    public void setLength(int length) {
+        length_ = length;
     }
 
     public int getOverlayColorSpace() {
         return overlayColorSpace;
     }
 
+    public void setOverlayColorSpace(int overlayColorSpace) {
+        this.overlayColorSpace = overlayColorSpace;
+    }
+
     public int getRed() {
         return red;
+    }
+
+    public void setRed(int red) {
+        this.red = red;
     }
 
     public int getGreen() {
         return green;
     }
 
+    public void setGreen(int green) {
+        this.green = green;
+    }
+
     public int getBlue() {
         return blue;
+    }
+
+    public void setBlue(int blue) {
+        this.blue = blue;
     }
 
     public int getAlpha() {
         return alpha;
     }
 
+    public void setAlpha(int alpha) {
+        this.alpha = alpha;
+    }
+
     public int getOpacity() {
         return opacity;
+    }
+
+    public void setOpacity(int opacity) {
+        this.opacity = opacity;
     }
 
     public int getKind() {
         return kind;
     }
 
-    public void read(RandomAccessFile rafile) {
+    public void setKind(int kind) {
+        this.kind = kind;
+    }
+
+    public byte[] getData() {
+        return arr_Data;
+    }
+
+    public void setData(byte[] array) {
+        arr_Data = array;
+    }
+
+    public int getFiller() {
+        return filler;
+    }
+
+    public void setFiller(byte[] array) throws IOException {
+        if (null == array) {
+            throw new IOException("The filler of the GlobalLayerMaskInfo is wrong.");
+        }
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] != 0) {
+                throw new IOException("The filler of the GlobalLayerMaskInfo is wrong.");
+            }
+        }
+        filler = 0;
+    }
+
+    public void read(DataInputStream dinstream) {
         try {
-            long location = rafile.getFilePointer();
-
-            readDataLength(rafile);
-            readData(rafile);
-
-            length_ += length_Data;
-            System.out.println("global layer mask info space: " + (location + length_ - rafile.getFilePointer()));
-            rafile.seek(location + getLength());
+            readDataLength(dinstream);
+            readData(dinstream, getDataLength());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void readData(RandomAccessFile rafile) throws IOException {
-        if (length_Data > 0) {
-            readDataArray(rafile);
+    private void readDataLength(DataInputStream dinstream) throws IOException {
+        //Global Layer Mask Info Length:4
+        //4,Length of global layer mask info section.
+        setDataLength(dinstream.readInt());
+        setLength(4 + getDataLength());
+    }
+
+    public void readData(DataInputStream dinstream, int length) throws IOException {
+        if (length > 0) {
+            byte[] arr = new byte[length];
+            dinstream.read(arr);
+            setData(arr);
+            readDataArray(arr);
         }
     }
 
-    public void readDataArray(RandomAccessFile rafile) throws IOException {
-        readOverlayColorSpace(rafile);
-        readColorComponents(rafile);
-        readOpacity(rafile);
-        readKind(rafile);
-        readFiller(rafile);
-    }
+    public void readDataArray(byte[] array) {
+        try {
+            DataInputStream dinstream = new DataInputStream(new ByteArrayInputStream(array));
+            //Overlay Color Space:2
+            //2,Overlay Color Space(undocumented）
+            setOverlayColorSpace(dinstream.readShort() & 0xFF);
 
-    private void readFiller(RandomAccessFile rafile) throws IOException {
-        //4.3.6 Filler: zeros：?
-        length_Filler = length_Data - length_;
+            //Color Components:8
+            //4 * 2,byte color components
+            setRed(dinstream.readShort() & 0xFF);
+            setGreen(dinstream.readShort() & 0xFF);
+            setBlue(dinstream.readShort() & 0xFF);
+            setAlpha(dinstream.readShort() & 0xFF);
 
-        rafile.skipBytes(length_Filler);
-        filler = 0;
-    }
+            //Opacity:2
+            //2,Opacity. 0 = transparent, 100 = opaque.
+            setOpacity((dinstream.readShort() & 0xFF) % 100);
 
-    private void readKind(RandomAccessFile rafile) throws IOException {
-        //4.3.5 Kind：1
-        // Kind. 0 = Color selected--i.e. inverted; 1 = Color protected;128 = use value stored per layer. This value is preferred. The others are for backward compatibility with beta versions.
-        kind = rafile.readByte() & 0xFF;
-        length_ += 1;
-    }
+            //Kind：1
+            //1,Kind. 0 = Color selected--i.e. inverted; 1 = Color protected;128 = use value stored per layer. This value is preferred. The others are for backward compatibility with beta versions.
+            setKind(dinstream.readByte() & 0xFF);
 
-    private void readOpacity(RandomAccessFile rafile) throws IOException {
-        //4.3.4 Opacity:2
-        // Opacity. 0 = transparent, 100 = opaque.
-        opacity = rafile.readShort();
-        length_ += 2;
-    }
-
-    private void readColorComponents(RandomAccessFile rafile) throws IOException {
-        //4.3.3 Color Components:8
-        // 4 * 2 byte color components
-        red = rafile.readShort();
-        green = rafile.readShort();
-        blue = rafile.readShort();
-        alpha = rafile.readShort();
-        length_ += 8;
-    }
-
-    private void readOverlayColorSpace(RandomAccessFile rafile) throws IOException {
-        //4.3.2 Overlay Color Space(undocumented）：2
-        overlayColorSpace = rafile.readShort();
-        length_ += 2;
-    }
-
-    private void readDataLength(RandomAccessFile rafile) throws IOException {
-        //4.3.1 Global Layer Mask Info Length:4
-        // Length of global layer mask info section.
-        length_Data = rafile.readInt();
-        length_ += 4;
+            //Filler: zeros:Variable
+            int length_Filler = array.length - 2 - 8 - 2 - 1;
+            if (length_Filler > 0) {
+                byte[] arr = new byte[length_Filler];
+                dinstream.read(arr);
+                setFiller(arr);
+            }
+            dinstream.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
         sbuilder.append("Global Layer Mask Info Length: " + getLength());
         sbuilder.append("/overlayColorSpace: " + overlayColorSpace);
-        sbuilder.append("/color: " + red + "/" + green + "/" + blue + "/" + alpha);
+        sbuilder.append("/red: " + red + "/green: " + green + "/blue: " + blue + "/alpha: " + alpha);
         sbuilder.append("/opacity: " + opacity);
         sbuilder.append("/kind: " + kind);
         sbuilder.append("/filler: " + filler);
