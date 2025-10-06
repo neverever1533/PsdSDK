@@ -15,7 +15,7 @@ Psd SDK for Java
     - channels.
     - opacity.
     - etc.
-- <u>Mask</u> :
+- <u>Mask/AdjustmentData</u> :
     - left, right, etc.
 - <u>LayerType</u> :
     - file, folder open, folder closed, hidden.
@@ -23,9 +23,13 @@ Psd SDK for Java
     - byte[] :
         - new String(nameBytes, Charset.forName(charsetName));
 
+#### 可获取的全局图层蒙版信息（<u>GlobalLayerMaskInfo</u>）：
+- <u>GlobalMask</u> :
+    - red, green, blue, alpha, opacity, kind.
+
 #### 解析后获取的图像像素数据结构（<u>Pixels</u>）：
 - byte[channels][height][width]
-    - <u>channels</u> : (3 - 6)
+    - <u>channels</u> (3 - 6) :
         - id = 0 : red
         - id = 1 : green
         - id = 2 : blue
