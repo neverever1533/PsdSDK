@@ -58,7 +58,7 @@ import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.LayerRecords;
 ```java
     byte[][][] pixels = layerRecords.getImageData();
     File dirFile = psdFile.getParentFile();
-    String name = lrecords.getName(lrecords.getCharset());
+    String name = layerRecords.getName(layerRecords.getCharset());
     name += ".png";
     exportImage(new File(dirFile, name), pixels, layerRecords.getWidth(), layerRecords.getHeight());
 ```
