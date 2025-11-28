@@ -76,7 +76,7 @@ import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.LayerRecords;
 - _BufferedImage_ :
 ```java
     BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-    DataBufferInt dataBufferInt = ((DataBufferInt) bimage.getRaster().getDataBuffer());
+    DataBufferInt dataBufferInt = ((DataBufferInt) bufferedImage.getRaster().getDataBuffer());
     ...
     for (int i = 0; i < width; i++) {
         for (int j = 0; j < height; j++) {
