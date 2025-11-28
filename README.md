@@ -76,6 +76,7 @@ import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.LayerRecords;
 - _BufferedImage_ :
 ```java
     BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+    DataBufferInt dataBufferInt = ((DataBufferInt) bimage.getRaster().getDataBuffer());
     ...
     for (int i = 0; i < width; i++) {
         for (int j = 0; j < height; j++) {
@@ -86,7 +87,7 @@ import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.LayerRecords;
             red = arrays[0][j][i] & 0xff;
             ...
             rgb = (alpha << 24) | (red << 16) | (green << 8) | blue;
-            ...
+            dataBufferInt.setElem(j * width + i, rgb);
         }
     }
     ImageIO.write(bufferedImage, "png", pngFile);
