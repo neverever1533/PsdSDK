@@ -74,6 +74,24 @@ import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.LayerRecords;
     name = name.substring(0, name.length() - 4) + ".png";
     write(putils.getImage(arrays, fheader.getWidth(), fheader.getHeight()), new File(dirFile, name));
 ```
+- _BufferedImage_ :
+```java
+    BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+    int rgb;
+    int a = 0xff;
+    ...
+    for (int x = 0; x < width; x++) {
+        for (int y = 0; y < height; y++) {
+            if (channels > 3) {
+                a = arrays[3][y][x] & 0xff;
+            }
+            r = arrays[0][y][x] & 0xff;
+            ...
+            rgb = (a << 24) | (r << 16) | (g << 8) | b;
+            image.setRGB(x, y, rgb);
+        }
+    }
+```
 
 ## 许可（License）：
 
