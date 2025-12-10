@@ -60,37 +60,19 @@ import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.LayerRecords;
 ```
 - _pixels_ :
 ```java
-    byte[][][] pixels = layerRecords.getImageData();
+    byte[][][] arrays = layerRecords.getImageData();
     File dirFile = psdFile.getParentFile();
     String name = layerRecords.getName(layerRecords.getCharset());
     name += ".png";
-    exportImage(new File(dirFile, name), pixels, layerRecords.getWidth(), layerRecords.getHeight());
+    write(putils.getImage(arrays, lrecords.getWidth(), lrecords.getHeight()), new File(dirFile, name));
 ```
 - _ImageData_ :
 ```java
-    ...
+    ImageData idata = putils.getImageData();
+    arrays = idata.getImageData();
     name = psdFile.getName();
-    name += ".png";
-    exportImage(new File(dirFile, name), imageData.getImageData(), fileHeader.getWidth(), fileHeader.getHeight());
-```
-- _BufferedImage_ :
-```java
-    BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-    DataBufferInt dataBufferInt = ((DataBufferInt) bufferedImage.getRaster().getDataBuffer());
-    ...
-    for (int i = 0; i < width; i++) {
-        for (int j = 0; j < height; j++) {
-            alpha = 0xff;
-            if (channels > 3) {
-                alpha = arrays[3][j][i] & 0xff;
-            }
-            red = arrays[0][j][i] & 0xff;
-            ...
-            rgb = (alpha << 24) | (red << 16) | (green << 8) | blue;
-            dataBufferInt.setElem(j * width + i, rgb);
-        }
-    }
-    ImageIO.write(bufferedImage, "png", pngFile);
+    name = name.substring(0, name.length() - 4) + ".png";
+    write(putils.getImage(arrays, fheader.getWidth(), fheader.getHeight()), new File(dirFile, name));
 ```
 
 ## 许可（License）：
