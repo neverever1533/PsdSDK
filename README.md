@@ -38,11 +38,21 @@ Psd SDK for Java
         - id = 5 : real mask (-3)
 
 ## 项目使用方法（Usage）：
-- _PsdSDK_ :
+### _PsdSDK_ :
 
 将<u>PsdSDK.jar</u>加入项目依赖包。
 
-- _PsdUtils_ :
+#### _PsdTool_ （替换PsdUtils.java）:
+```java
+import cn.imaginary.toolkit.PsdTool;
+    ...
+    PsdTool psdUtils = new PsdTool();
+    String psdFilePath = "xx.psd";
+    File psdFile = new File(psdFilePath);
+    psdTool.read(psdFile);
+```
+
+#### _~~PsdUtils~~_ （旧版使用）:
 ```java
 import cn.imaginary.toolkit.image.PsdUtils;
     ...
@@ -51,14 +61,19 @@ import cn.imaginary.toolkit.image.PsdUtils;
     File psdFile = new File(psdFilePath);
     psdUtils.read(psdFile);
 ```
-- _Layers_ :
+
+---
+
+#### _Layers_ （获取所有图层）:
 ```java
 import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.LayerRecords;
     ...
-    ArrayList<LayerRecords> arrayList = psdUtils.getLayers();
+//    ArrayList<LayerRecords> arrayList = psdUtils.getLayers();//PsdUtils的方法
+    ArrayList<LayerRecords> arrayList = psdUtils.getLayerRecordsList();//PsdTool的方法
     LayerRecords layerRecords = arrayList.get(0);
 ```
-- _pixels_ :
+
+#### _pixels_ （选择psd文件图层，导出为png）:
 ```java
     byte[][][] arrays = layerRecords.getImageData();
     File dirFile = psdFile.getParentFile();
@@ -66,7 +81,8 @@ import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.LayerRecords;
     name += ".png";
     write(putils.getImage(arrays, lrecords.getWidth(), lrecords.getHeight()), new File(dirFile, name));
 ```
-- _ImageData_ :
+
+#### _ImageData_ （导出psd文件预览图为png）:
 ```java
     ImageData idata = putils.getImageData();
     arrays = idata.getImageData();
@@ -74,8 +90,24 @@ import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.LayerRecords;
     name = name.substring(0, name.length() - 4) + ".png";
     write(putils.getImage(arrays, fheader.getWidth(), fheader.getHeight()), new File(dirFile, name));
 ```
-- _BufferedImage_ :
+
+---
+
+- _Write_ （导出图像为文件）:
+
+方法：
 ```java
+public void write(BufferedImage image, File file) {
+    ImageIO.write(image, "png", file);
+}
+```
+
+- _~~BufferedImage~~_ （旧版使用，若PsdUtils.java没有getImage()方法，则手动获取图层像素数组并导出为png）:
+```java
+public void exportImage(File file, byte[][][] arrays, int width, int height) {
+    byte[][][] arrays = layerRecords.getImageData();
+    int channels = arrays.length;
+
     BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
     int rgb;
     int a = 0xff;
@@ -90,7 +122,9 @@ import cn.imaginary.toolkit.image.photoshopdocument.layerandmask.LayerRecords;
             rgb = (a << 24) | (r << 16) | (g << 8) | b;
             image.setRGB(x, y, rgb);
         }
+        write(image, file);
     }
+}
 ```
 
 ## 许可（License）：
