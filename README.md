@@ -42,14 +42,18 @@ Psd SDK for Java
 
 将<u>PsdSDK.jar</u>加入项目依赖包。
 
+#### _ImageFile_ （读取图片）:
+```java
+    String psdFilePath = "xx.psd";
+    File psdFile = new File(psdFilePath);
+```
+
 #### _PsdTool_ （替换PsdUtils.java）:
 ```java
 import cn.imaginary.toolkit.PsdTool;
     ...
     PsdTool psdUtils = new PsdTool();
-    String psdFilePath = "xx.psd";
-    File psdFile = new File(psdFilePath);
-    psdTool.read(psdFile);
+    psdUtils.read(psdFile);
 ```
 
 #### _~~PsdUtils~~_ （旧版使用）:
@@ -57,8 +61,6 @@ import cn.imaginary.toolkit.PsdTool;
 import cn.imaginary.toolkit.image.PsdUtils;
     ...
     PsdUtils psdUtils = new PsdUtils();
-    String psdFilePath = "xx.psd";
-    File psdFile = new File(psdFilePath);
     psdUtils.read(psdFile);
 ```
 
